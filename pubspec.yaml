@@ -1,0 +1,26 @@
+name: mhu_dart_builder
+version: 1.0.1-dev
+description: Common tools used in the build process of my Dart and Flutter projects
+repository: https://github.com/maprohu/mhu_builder
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  path: ^1.8.3
+  rxdart: ^0.27.7
+  collection: ^1.17.1
+  resource_portable: any
+  analyzer: any
+  protoc_plugin: any
+  protobuf: any
+  dart_style: any
+  source_gen: any
+  mhu_dart_commons:
+    path: ../mhu_dart_commons
+  mhu_dart_proto:
+    path: ../mhu_dart_proto
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.21.0
