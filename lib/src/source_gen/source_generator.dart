@@ -266,7 +266,8 @@ extension BuilderStringX on String {
       return _formatter.format(this);
     } catch (_) {
       if (errorOutput != null) {
-        errorOutput.writeAsString(this);
+        errorOutput.parent.createSync(recursive: true);
+        errorOutput.writeAsStringSync(this);
         stderr.writeln("error formatting: ${errorOutput.uri}");
       }
       rethrow;
