@@ -1,7 +1,7 @@
 name: mhu_dart_builder
-version: 1.0.0
+version: 1.0.1
 description: Common tools used in the build process of my Dart and Flutter projects
-repository: https://github.com/maprohu/mhu_builder
+repository: https://github.com/maprohu/mhu_dart_builder
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
