@@ -1,6 +1,3 @@
-
-
-
 import '../source_generator.dart';
 
 import '../class_gen.dart';
@@ -13,6 +10,7 @@ class MethodGen extends MemberGen {
   final Mthd mthd;
   final MethodBodyFn body;
 
+  @override
   late final src = mthd.declare.followedBy(body(this).src);
 
   MethodGen({
@@ -72,6 +70,6 @@ class BlockBodyGen extends MethodBodyGen {
 
   const BlockBodyGen(this.content) : super._();
 
+  @override
   String get src => content.curly;
 }
-

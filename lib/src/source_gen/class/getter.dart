@@ -1,4 +1,3 @@
-
 import '../class_gen.dart';
 import '../gen.dart';
 import '../prop.dart';
@@ -10,6 +9,7 @@ class GetterGen extends MemberGen {
   final Prop prop;
   final GetterBodyFn body;
 
+  @override
   late final src =
       '${prop.type.withNullability} get ${prop.name}${body(this).src}';
 
@@ -28,4 +28,3 @@ class GetterGen extends MemberGen {
     );
   }
 }
-

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
 import 'package:mhu_dart_commons/commons.dart';
 
@@ -9,13 +10,15 @@ import '../source_gen/class_gen.dart';
 import 'proto_root.dart';
 import 'protoc_plugin.dart';
 
-Future<void> runProtoMetaGenerator(
-  String packageName, {
+Future<void> runProtoMetaGenerator({
+  String? packageName,
   List<String> dependencies = const [],
 }) async {
+  packageName ??= await packageNameFromPubspec();
+
   final cwd = Directory.current;
 
-  final metaFile = cwd.protoMetaFile(packageName);
+  final metaFile = cwd.pbmetaFile(packageName);
 
   final content = [
     r"import 'dart:core' as $core;",
@@ -25,9 +28,15 @@ Future<void> runProtoMetaGenerator(
     r"import 'package:protobuf/protobuf.dart' as $protobuf;",
     r"import 'package:fast_immutable_collections/fast_immutable_collections.dart';",
     "import '${cwd.pbFile(packageName).filename}';",
+    for (final dep in dependencies) "import 'package:$dep/$dep.dart';",
     generateProtoMeta(
       'MhuLib',
-      Directory.current.file('proto/generated/descriptor').readAsBytesSync(),
+      await cwd.descriptorSetOut.readAsBytes(),
+      importedDescriptorBytes: [
+        for (final dep in dependencies)
+          await packageRootDir(dep)
+              .then((value) => value.descriptorSetOut.readAsBytes())
+      ],
     ),
   ];
 
@@ -44,15 +53,18 @@ Future<void> runProtoMetaGenerator(
   );
 }
 
-String generateProtoMeta(String name, List<int> descriptorFileBytes) => PmgRoot(
+String generateProtoMeta(
+  String name,
+  List<int> descriptorFileBytes, {
+  Iterable<List<int>> importedDescriptorBytes = const Iterable.empty(),
+}) =>
+    PmgRoot(
       descriptorFileBytes,
       PmgCtx(descriptorFileBytes, name),
+      importedDescriptorBytes: importedDescriptorBytes,
     ).generate();
 
 const notSet = 'notSet';
-
-/** [RxVarImplOpt] */
-const TRxVarOpt = 'RxVarImplOpt';
 
 final listClass = ClassGen(name: core(List));
 

@@ -1,3 +1,5 @@
+// ignore_for_file: implementation_imports
+
 import 'package:mhu_dart_builder/src/source_gen/reflect.dart';
 import 'package:mhu_dart_commons/commons.dart';
 import 'package:protobuf/protobuf.dart';
@@ -24,7 +26,7 @@ class ProtocPlugin {
     }
   });
 
-  ProtocPlugin(this.descriptorFileBytes) {}
+  ProtocPlugin(this.descriptorFileBytes);
 
   String typeOfField(GeneratedMessage fieldDescriptorProto) {
     final descriptor =

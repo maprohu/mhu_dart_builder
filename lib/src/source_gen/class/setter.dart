@@ -8,6 +8,7 @@ class SetterGen extends MemberGen {
 
   late final valueVar = prop.name;
 
+  @override
   late final src = 'set ${prop.name}'.andParen([
     '${prop.type.withNullability} $valueVar',
   ]).followedBy(body(valueVar));

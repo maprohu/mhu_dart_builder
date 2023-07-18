@@ -97,6 +97,7 @@ class WhenMethodGen extends MemberGen {
     ),
   );
 
+  @override
   late final src = methodGen.src;
 
   WhenMethodGen({

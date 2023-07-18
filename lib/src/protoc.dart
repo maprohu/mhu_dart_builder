@@ -1,10 +1,10 @@
 import 'dart:io';
 
+import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
-import 'package:resource_portable/resource_portable.dart';
 
 extension ProtocDirectoryX on Directory {
-  Directory get dartOut => dirTo(['lib', 'proto']);
+  Directory get dartOut => dirTo(['lib', 'src', 'generated']);
 
   File get descriptorSetOut => fileTo([
         'proto',
@@ -15,14 +15,17 @@ extension ProtocDirectoryX on Directory {
   Directory get protoPath => dirTo(['proto']);
 
   File pbFile(String package) => dartOut.file('$package.pb.dart');
+
   File pbenumFile(String package) => dartOut.file('$package.pbenum.dart');
-  File protoMetaFile(String package) =>  dartOut.file('${package}_meta.dart');
+
+  File pbmetaFile(String package) => dartOut.file('$package.pbmeta.dart');
 }
 
-Future<void> runProtoc(
-  String packageName, {
+Future<void> runProtoc({
+  String? packageName,
   List<String> dependencies = const [],
 }) async {
+  packageName ??= await packageNameFromPubspec();
   final cwd = Directory.current;
   final dartOut = cwd.dartOut;
   await dartOut.create(recursive: true);
@@ -40,19 +43,18 @@ Future<void> runProtoc(
   );
 
   for (final dep in dependencies) {
-    final depDir = Directory(dep).protoPath;
-    Future<void> create(String type) async {
-      await dartOut.file("$dep.$type.dart").writeAsString(
-          "export 'package:${depDir.file("$dep.$type.dart").uri}';");
+    Future<void> create(File Function(Directory dir) type) async {
+      final file = type(cwd);
+      final content = "export 'package:$dep/$dep.dart';";
+      await file.writeAsString(content);
     }
 
-    await create('pb');
-    await create('pbenum');
+    await create((d) => d.pbFile(dep));
+    await create((d) => d.pbenumFile(dep));
   }
 }
 
 Future<String> _protoPath(String package) async {
-  final resource = Resource("package:$package/.");
-  final uri = await resource.uriResolved;
-  return Directory(uri.toFilePath()).parent.protoPath.path;
+  final root = await packageRootDir(package);
+  return root.protoPath.path;
 }

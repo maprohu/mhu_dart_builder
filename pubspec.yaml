@@ -1,5 +1,5 @@
 name: mhu_dart_builder
-version: 1.0.1-dev
+version: 1.0.0
 description: Common tools used in the build process of my Dart and Flutter projects
 repository: https://github.com/maprohu/mhu_builder
 
@@ -10,16 +10,20 @@ dependencies:
   path: ^1.8.3
   rxdart: ^0.27.7
   collection: ^1.17.1
-  resource_portable: any
-  analyzer: any
-  protoc_plugin: any
-  protobuf: any
-  dart_style: any
-  source_gen: any
-  mhu_dart_commons:
-    path: ../mhu_dart_commons
-  mhu_dart_proto:
-    path: ../mhu_dart_proto
+  resource_portable:  ^3.0.2
+  analyzer: ^6.0.0
+  protoc_plugin:  ^21.0.2
+  protobuf:  ^3.0.0
+  dart_style: ^2.3.2
+  source_gen: ^1.4.0
+  pubspec_parse: ^1.2.3
+
+  mhu_dart_commons: ^1.0.7
+#  mhu_dart_commons:
+#    path: ../mhu_dart_commons
+  mhu_dart_proto: ^1.0.1
+#  mhu_dart_proto:
+#    path: ../mhu_dart_proto
 
 dev_dependencies:
   lints: ^2.0.0

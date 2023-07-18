@@ -1,6 +1,3 @@
-
-
-
 import 'package:mhu_dart_builder/src/source_gen/class/method.dart';
 import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 import 'package:mhu_dart_commons/commons.dart';
@@ -11,13 +8,6 @@ import 'class/getter.dart';
 import 'class_gen.dart';
 import 'gen.dart';
 import 'prop.dart';
-
-// String factoryClass({
-//   required String name,
-//   required String content,
-//   required ClassGen target,
-// }) {
-// }
 
 class FactoryClassGen extends TopGen {
   final String name;
@@ -39,12 +29,9 @@ class FactoryClassGen extends TopGen {
     content: (self) => content.asContent,
   );
 
+  @override
   late final src = [
     classGen,
-    // 'class $factoryClassName'.andCurly([
-    //   'const $factoryClassName();',
-    //   content,
-    // ]),
     ConstGen(
       prop: Prop(
         name: factoryInstance,
@@ -52,7 +39,6 @@ class FactoryClassGen extends TopGen {
       ),
       value: factoryClassName.andParen([]),
     ),
-    // 'const $factoryInstance = $factoryClassName();',
     target.extensionGen(
       GetterGen(
         prop: Prop(
@@ -61,7 +47,6 @@ class FactoryClassGen extends TopGen {
         ),
         body: factoryInstance.asExpressionBody,
       ).src,
-      // '$factoryClassName get $name => $factoryInstance;',
       suffix: '\$Ext\$$name',
     ),
   ].srcsJoin;

@@ -1,6 +1,3 @@
-
-
-
 import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 
 import 'class_gen.dart';
@@ -24,11 +21,10 @@ class ExtensionGen extends MemberGen {
 
   late final name = '${base.name}$suffix';
 
-  String get src =>
-      [
+  @override
+  String get src => [
         commentLineOf(comment),
         'extension $name${generics.paramsBrackets} on ${base.nameWithArgs}'
             .andCurly([members.srcsJoin]),
       ].join();
-
 }

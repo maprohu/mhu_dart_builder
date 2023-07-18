@@ -15,6 +15,7 @@ class FieldGen extends MemberGen {
     this.defaultSrc,
   });
 
+  @override
   late final src = (late ? 'late ' : '')
       .followedBy('final ${prop.typeAndName}')
       .followedBy(defaultSrc?.let((v) => '=$v') ?? '')

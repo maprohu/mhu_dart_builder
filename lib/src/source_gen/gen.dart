@@ -1,4 +1,3 @@
-
 abstract class SourceGen {
   String get src;
 }
@@ -10,6 +9,7 @@ abstract class MemberGen extends SourceGen {}
 abstract class ElemGen implements TopGen, MemberGen {}
 
 class GenString extends MemberGen {
+  @override
   final String src;
 
   GenString(this.src);
@@ -26,4 +26,3 @@ extension IterableMemberGenX on Iterable<SourceGen> {
 
   String get srcsJoin => srcs.join();
 }
-

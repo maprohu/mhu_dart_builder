@@ -7,7 +7,6 @@ import 'package:mhu_dart_commons/commons.dart';
 import 'package:mhu_dart_proto/mhu_dart_proto.dart';
 
 import '../source_gen/class_gen.dart';
-import '../source_gen/reflect.dart';
 import 'proto_meta_generator.dart';
 import 'proto_field.dart';
 import 'proto_message.dart';

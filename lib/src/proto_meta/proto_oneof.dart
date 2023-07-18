@@ -228,12 +228,9 @@ class PmgOneOf extends TopGen {
     ],
   );
 
+  @override
   late final src = [
     classGen,
-    // valueClassGen,
-    // ...fieldValueClassGens,
-    // rxValExtension,
-    // libRxValExtension,
     whenClassGen,
   ].srcsJoin;
 }
@@ -283,6 +280,7 @@ class PmgOneOfOption extends TopGen {
     ],
   );
 
+  @override
   late final src = classGen.src;
 
   PmgOneOfOption({

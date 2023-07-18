@@ -46,6 +46,7 @@ class Constr implements MemberGen {
 
   late final ref = '${owner.name}$dotName';
 
+  @override
   late final src = constSrc
       .followedBy(factorySrc)
       .followedBy(ref)
@@ -67,12 +68,15 @@ class Constr implements MemberGen {
     bool includeFactoryConstructors = false,
   }) =>
       constructors
-          .where((e) => (includeFactoryConstructors || !e.isFactory) && e.isPublic)
+          .where(
+              (e) => (includeFactoryConstructors || !e.isFactory) && e.isPublic)
           .map((e) => Constr.fromElement(owner, e));
 
   Mthd factoryMethod(String? name) => Mthd(
         type: owner.typ,
-        params: params.map((e) => e.copyWith(target: ParamNoTarget())),
+        params: params.map((e) => e.copyWith(
+              target: ParamNoTarget.instance,
+            )),
         name: name ?? this.name,
         generics: owner.generics,
       );
@@ -84,7 +88,7 @@ class Constr implements MemberGen {
 
   late final paramsNoTarget = params.map(
     (e) => e.copyWith(
-      target: ParamNoTarget(),
+      target: ParamNoTarget.instance,
     ),
   );
 

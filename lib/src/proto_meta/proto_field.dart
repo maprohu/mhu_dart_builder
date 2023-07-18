@@ -11,7 +11,6 @@ import '../source_gen/generic.dart';
 import '../source_gen/mthd.dart';
 import '../source_gen/param.dart';
 import '../source_gen/prop.dart';
-import '../source_gen/reflect.dart';
 import 'proto_enum.dart';
 import 'proto_message.dart';
 import 'proto_root.dart';

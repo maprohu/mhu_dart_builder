@@ -7,6 +7,7 @@ class ConstGen extends MemberGen {
   final Prop prop;
   final String value;
 
+  @override
   late final src = 'const ${prop.typeAndName} = $value'.andSemi;
 
   ConstGen({

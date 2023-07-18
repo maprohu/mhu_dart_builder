@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:mhu_dart_builder/src/proto_meta/proto_meta_generator.dart';
 import 'package:mhu_dart_builder/src/proto_meta/proto_root.dart';
-import 'package:mhu_dart_builder/src/source_gen/reflect.dart';
 import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 import 'package:mhu_dart_builder/src/source_gen/typ.dart';
 import 'package:mhu_dart_commons/commons.dart';
@@ -43,6 +42,7 @@ class PmgMsg extends TopGen {
   late final varName = messageClassName.uncapitalize();
   late final staticClassName = '$messageClassName\$';
   late final metaClassName = '$messageClassName\$\$';
+
   // late final metaClassName = '$messageClassName\$Meta\$';
   late final instanceVarName = 'instance\$';
   late final instanceReference = '$staticClassName.$instanceVarName';
@@ -68,7 +68,8 @@ class PmgMsg extends TopGen {
       nestedMessages.map((e) => '${e.instanceReference},'),
     ),
     ';',
-    'static const nestedEnums\$ = ${pmEnumCls.nameWithPrefix.chevrons}'.andSquare(
+    'static const nestedEnums\$ = ${pmEnumCls.nameWithPrefix.chevrons}'
+        .andSquare(
       nestedEnums.map((e) => '${e.instanceReference},'),
     ),
     ';',
@@ -113,16 +114,16 @@ class PmgMsg extends TopGen {
   late final metaClassSrc =
       'class $metaClassName extends $superClass'.andCurly([
     'const $metaClassName();',
-    'final index\$ = ${staticClassName}.index\$;',
-    'final globalIndex\$ = ${staticClassName}.globalIndex\$;',
+    'final index\$ = $staticClassName.index\$;',
+    'final globalIndex\$ = $staticClassName.globalIndex\$;',
     '$messageClassName get emptyMessage\$ => $messageClassName()..freeze();',
-    '${core(List)}${nestedMessageType.chevrons} get nestedMessages\$ => ${staticClassName}.nestedMessages\$;',
-    '${core(List)}${pmEnumCls.nameWithPrefix.chevrons} get nestedEnums\$ => ${staticClassName}.nestedEnums\$;',
+    '${core(List)}${nestedMessageType.chevrons} get nestedMessages\$ => $staticClassName.nestedMessages\$;',
+    '${core(List)}${pmEnumCls.nameWithPrefix.chevrons} get nestedEnums\$ => $staticClassName.nestedEnums\$;',
     if (!msg.isTopLevel)
       '${parentMessage.metaClassName} get parent\$ => ${parentMessage.instanceReference};',
     ...fields.map((e) => e.metaSrc),
     '$protoMetaPrefix.FieldsList${messageLibMetaGenerics.commasGenerics} get fields\$ => $staticClassName.fields\$;',
-    '$protoMetaPrefix.OneOfs<${messageClassName}> get oneofs\$ => $staticClassName.oneofs\$;',
+    '$protoMetaPrefix.OneOfs<$messageClassName> get oneofs\$ => $staticClassName.oneofs\$;',
     thisTypeGen.src
   ]);
 
@@ -131,17 +132,12 @@ class PmgMsg extends TopGen {
     name: metaClassName,
   );
 
-
   late final messageClassExtensionGen = messageClassGen.extensionGen([
     ...oneOfs.map((e) => e.extensionSrc),
     ...fields.map((e) => e.extensionSrc),
   ].join());
 
-
-
   late final extensionSrc = messageClassExtensionGen.src;
-
-
 
   late final fieldOverridesClassName = '$messageClassName\$FieldOverrides';
 
@@ -161,6 +157,7 @@ class PmgMsg extends TopGen {
 
   late final frp = ProtoFrp(this);
 
+  @override
   late final src = [
     staticClassSrc,
     metaClassSrc,

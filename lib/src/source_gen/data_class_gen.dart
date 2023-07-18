@@ -91,7 +91,6 @@ class DataClassGen extends TopGen {
       naming: ParamNaming.named,
       target: ParamTarget.thisTarget,
       nullability: ParamNullability.ofType,
-      // requirement: ParamRequirement.fromTyp(e.prop.type),
     ),
   );
 
@@ -102,23 +101,13 @@ class DataClassGen extends TopGen {
   );
 
   late final constrParamsOptional = constrParamsNoTarget.map(
-    (e) => e.copyWith(
-      requirement: ParamRequirement.optional,
-      nullability: ParamNullability.nullable,
-    ).withDefaultValue(null),
+    (e) => e
+        .copyWith(
+          requirement: ParamRequirement.optional,
+          nullability: ParamNullability.nullable,
+        )
+        .withDefaultValue(null),
   );
-
-  // late final constrParamsOptionalOpts = constrParamsOptional.map(
-  //   (e) => e.copyWith(
-  //     prop: e.prop.copyWith(
-  //       type: e.prop.type.let(
-  //         (t) => t.nullable
-  //             ? t.withNullable(false).asTypeArgumentOfType(Opt).typ
-  //             : t,
-  //       ),
-  //     ),
-  //   ).withDefaultValue(null),
-  // );
 
   late final classGen = ClassGen(
     name: name,
@@ -194,53 +183,6 @@ class DataClassGen extends TopGen {
           )
           .asExpressionBody,
     ),
-    // MethodGen(
-    //   mthd: Mthd(
-    //     name: 'copyWithOpt',
-    //     type: classGen.typ,
-    //     params: constrParamsOptionalOpts,
-    //   ),
-    //   body: classGen.name.andParen(
-    //     constrParams.map(
-    //       (e) {
-    //         final varname = e.name;
-    //         return e.arg(
-    //           e.prop.type.nullable
-    //               ? '$varname == null ? this.$varname : $varname.orNullLenient'
-    //               : '$varname ?? this.$varname',
-    //         );
-    //       },
-    //     ),
-    //   ).asExpressionBody,
-    // ),
-    // '${classGen.nameWithArgs} copyWithOpt'
-    //     .andParen([
-    //       params
-    //           .map(
-    //             (e) => Prop(
-    //               name: e.name,
-    //               type: e.type.nullable
-    //                   ? ClassGen(
-    //                       name: nm(Opt),
-    //                       generics: [e.type.withNullable(false).asGeneric],
-    //                     ).typ
-    //                   : e.type.withNullable(true),
-    //             ),
-    //           )
-    //           .paramsNullable
-    //           .curlyIfNotEmpty,
-    //     ])
-    //     .followedBy(' => ${classGen.name}')
-    //     .andParen(
-    //       params.map(
-    //         (e) => e.namedArgPassValue(
-    //           (varname) => e.type.nullable
-    //               ? '$varname == null ? this.$varname : $varname.orNullLenient'
-    //               : '$varname ?? this.$varname',
-    //         ),
-    //       ),
-    //     )
-    //     .andSemi,
     if (hasNullableProp) overrideMethodGen,
   ].srcsJoin;
 
@@ -252,71 +194,9 @@ class DataClassGen extends TopGen {
 
   late final extensionSrc = copyExtensionsFor(classGen, extensionExtra);
 
-  // late final ovrProps = params.map(
-  //   (e) => e.copyWith(
-  //     prop: e.prop.copyWith(
-  //       type: e.prop.type.asTypeArgumentOfType(Opt).typ,
-  //     ),
-  //   ),
-  // );
-
-  // late final ovrConstrParams = ovrProps.map(
-  //   (e) => e
-  //       .copyWith(
-  //         naming: ParamNaming.named,
-  //         target: ParamTarget.thisTarget,
-  //         nullability: ParamNullability.ofType,
-  //         requirement: ParamRequirement.required,
-  //       )
-  //       .withDefaultValue(null),
-  // );
-
-  // late final ovrClassGen = ClassGen(
-  //   name: ovrClassName ?? '${classGen.name}\$Ovr',
-  //   generics: generics,
-  //   constructorsFn: (self) => [
-  //     Constr(
-  //       owner: self,
-  //       params: ovrConstrParams,
-  //     ),
-  //   ],
-  //   content: (self) => [
-  //     // ...ovrProps.map((e) => FieldGen(e.prop)),
-  //     MethodGen(
-  //       mthd: Mthd(
-  //         name: overrideMethodName,
-  //         type: classGen.typ,
-  //         params: [
-  //           Param.simple(
-  //             name: overrideMethodParamName,
-  //             type: classGen.typ,
-  //           )
-  //         ],
-  //       ),
-  //       body: constructor.invokeSrc([
-  //         ...constructor.params.map(
-  //           (e) => e.arg(
-  //             e.name.followedBy(
-  //               '.map${e.prop.type.withNullability.genericsBrackets}'.andParen([
-  //                 '(v) => v.overrideWith($overrideMethodParamName.${e.name})).orDefault($overrideMethodParamName.${e.name}'
-  //               ]),
-  //             ),
-  //           ),
-  //         )
-  //       ]).asExpressionBody,
-  //     ),
-  //   ],
-  //   comment: comment,
-  //   implements: [
-  //     ClassGen.fromTypeDynamic(Ovr).copyWith(
-  //       generics: [classGen.asGenericArg],
-  //     ),
-  //   ].asConstant1(),
-  // );
-
+  @override
   late final src = [
     classGen.src,
     extensionSrc,
-    // ovrClassGen.src,
   ].join();
 }

@@ -1,4 +1,3 @@
-
 import 'package:analyzer/dart/element/element.dart';
 import 'package:collection/collection.dart';
 import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
@@ -26,20 +25,20 @@ class Param {
 
   Param.fromProp(Prop prop)
       : this(
-    prop: prop,
-    naming: ParamNaming.unnamed,
-    requirement: ParamRequirement.required,
-  );
+          prop: prop,
+          naming: ParamNaming.unnamed,
+          requirement: ParamRequirement.required,
+        );
 
   Param.simple({
     required String name,
     required Typ type,
   }) : this.fromProp(
-    Prop(
-      name: name,
-      type: type,
-    ),
-  );
+          Prop(
+            name: name,
+            type: type,
+          ),
+        );
 
   late final name = prop.name;
   late final nameEscaped = name.startsWith('_') ? '\$$name' : name;
@@ -67,22 +66,22 @@ class Param {
 
   Param.fromElement(ParameterElement element)
       : this(
-    prop: Prop(
-      name: element.name,
-      type: Typ.fromType(element.type),
-    ),
-    naming: ParamNaming.fromParameter(element),
-    requirement: ParamRequirement.fromParameter(element),
-    defaultValue: element.defaultValueCode,
-  );
+          prop: Prop(
+            name: element.name,
+            type: Typ.fromType(element.type),
+          ),
+          naming: ParamNaming.fromParameter(element),
+          requirement: ParamRequirement.fromParameter(element),
+          defaultValue: element.defaultValueCode,
+        );
 
   Param.fromElementWithType(ParameterElement element, Typ type)
       : this(
-    prop: Prop(name: element.name, type: type),
-    naming: ParamNaming.fromParameter(element),
-    requirement: ParamRequirement.fromParameter(element),
-    defaultValue: element.defaultValueCode,
-  );
+          prop: Prop(name: element.name, type: type),
+          naming: ParamNaming.fromParameter(element),
+          requirement: ParamRequirement.fromParameter(element),
+          defaultValue: element.defaultValueCode,
+        );
 
   Param copyWith({
     Prop? prop,
@@ -102,18 +101,15 @@ class Param {
     );
   }
 
-  Param withDefaultValue(String? defaultValue) =>Param(
-    prop: prop ,
-    naming: naming ,
-    requirement: requirement,
-    nullability: nullability ,
-    target: target,
-    defaultValue: defaultValue,
-  );
+  Param withDefaultValue(String? defaultValue) => Param(
+        prop: prop,
+        naming: naming,
+        requirement: requirement,
+        nullability: nullability,
+        target: target,
+        defaultValue: defaultValue,
+      );
 }
-
-
-
 
 class ParamList {
   final Iterable<Param> params;
@@ -171,13 +167,13 @@ class ParamUnnamed extends ParamNaming {
   const ParamUnnamed._() : super._();
   static const instance = ParamUnnamed._();
 
-  @deprecated
-  factory ParamUnnamed() = ParamUnnamed._;
-
+  @override
   bool get isNamed => false;
 
+  @override
   String requiredPrefix() => '';
 
+  @override
   String arg(Param param, String value) => '$value,';
 }
 
@@ -185,13 +181,13 @@ class ParamNamed extends ParamNaming {
   const ParamNamed._() : super._();
   static const instance = ParamNamed._();
 
-  @deprecated
-  factory ParamNamed() = ParamNamed._;
-
+  @override
   bool get isNamed => true;
 
+  @override
   String requiredPrefix() => 'required ';
 
+  @override
   String arg(Param param, String value) => '${param.name}: $value,';
 }
 
@@ -225,11 +221,10 @@ class ParamOptional extends ParamRequirement {
   const ParamOptional._() : super._();
   static const instance = ParamOptional._();
 
-  @deprecated
-  factory ParamOptional() = ParamOptional._;
-
+  @override
   bool get isRequired => false;
 
+  @override
   String declare(Param param) => param.typeOrTargetDotNameDefaultComma;
 }
 
@@ -237,11 +232,10 @@ class ParamRequired extends ParamRequirement {
   const ParamRequired._() : super._();
   static const instance = ParamRequired._();
 
-  @deprecated
-  factory ParamRequired() = ParamRequired._;
-
+  @override
   bool get isRequired => true;
 
+  @override
   String declare(Param param) =>
       '${param.naming.requiredPrefix()}${param.typeOrTargetDotNameDefaultComma}';
 }
@@ -260,9 +254,7 @@ class ParamNoTarget extends ParamTarget {
   const ParamNoTarget._() : super._();
   static const instance = ParamNoTarget._();
 
-  @deprecated
-  factory ParamNoTarget() = ParamNoTarget._;
-
+  @override
   String typeOrTargetDot(Param param) => '${param.nullability.type(param)} ';
 }
 
@@ -270,9 +262,7 @@ class ParamThis extends ParamTarget {
   const ParamThis._() : super._();
   static const instance = ParamThis._();
 
-  @deprecated
-  factory ParamThis() = ParamThis._;
-
+  @override
   String typeOrTargetDot(Param param) => 'this.';
 }
 
@@ -280,9 +270,7 @@ class ParamSuper extends ParamTarget {
   const ParamSuper._() : super._();
   static const instance = ParamSuper._();
 
-  @deprecated
-  factory ParamSuper() = ParamSuper._;
-
+  @override
   String typeOrTargetDot(Param param) => 'super.';
 }
 
@@ -299,9 +287,7 @@ class ParamNullable extends ParamNullability {
   const ParamNullable._() : super._();
   static const instance = ParamNullable._();
 
-  @deprecated
-  factory ParamNullable() = ParamNullable._;
-
+  @override
   String type(Param param) =>
       param.prop.type.withNullable(true).withNullability;
 }
@@ -310,9 +296,6 @@ class ParamTypeNullability extends ParamNullability {
   const ParamTypeNullability._() : super._();
   static const instance = ParamTypeNullability._();
 
-  @deprecated
-  const factory ParamTypeNullability() = ParamTypeNullability._;
-
+  @override
   String type(Param param) => param.prop.type.withNullability;
 }
-

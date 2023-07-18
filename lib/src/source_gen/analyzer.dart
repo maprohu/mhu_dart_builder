@@ -36,7 +36,7 @@ extension InterafaceTypeX on InterfaceType {
   DartType get firstTypeArgumentIncludingDynamic => typeArguments.first;
 
   DartType? get firstTypeArgument =>
-      firstTypeArgumentIncludingDynamic.takeIf((a) => !a.isDynamic);
+      firstTypeArgumentIncludingDynamic.takeIf((a) => a is! DynamicType);
 }
 
 extension InterfaceElementX on InterfaceElement {
@@ -167,9 +167,9 @@ class SearchAbstract {
     }
 
     // mixins
-    mixins.reversed.forEach((mixin) {
+    for (final mixin in mixins.reversed) {
       iface(mixin, false);
-    });
+    }
 
     // superclass
     supertype?.let((s) => iface(s, false));
@@ -177,9 +177,9 @@ class SearchAbstract {
     // interfaces
     // TODO this should be breadth-first, otherwise it may find
     // a less specific definition first
-    interfaces.reversed.forEach((element) {
+    for (final element in interfaces.reversed) {
       iface(element, true);
-    });
+    }
   }
 
   late final ms = methods.found.values;
