@@ -5,6 +5,7 @@ import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 import 'package:mhu_dart_commons/commons.dart';
 import 'package:mhu_dart_proto/mhu_dart_proto.dart';
 import 'package:protobuf/protobuf.dart';
+import 'package:recase/recase.dart';
 
 import '../source_gen/class/constr.dart';
 import '../source_gen/class_gen.dart';
@@ -40,18 +41,22 @@ class PmgRoot extends PdRoot<PmgMsg, PmgFld, PmgEnum> {
   final PmgCtx ctx;
   final List<int> descriptorFileBytes;
 
+  final Iterable<PmgCtx> importedLibs;
+
   PmgRoot(
     this.descriptorFileBytes,
     this.ctx, {
-    Iterable<List<int>> importedDescriptorBytes = const Iterable.empty(),
+    this.importedLibs = const Iterable.empty(),
   }) : super(
           descriptorProto:
               FileDescriptorSet.fromBuffer(descriptorFileBytes).file.single,
-          enm: (enm) => PmgEnum.create(enm),
+          enm: (enm) => PmgEnum.create(enm, ctx),
           fld: (fld) => PmgFld.create(fld, ctx),
           msg: (msg) => PmgMsg.create(msg, ctx),
-          importedDescriptorProtos: importedDescriptorBytes.map(
-            (bytes) => FileDescriptorSet.fromBuffer(bytes).file.single,
+          importedDescriptorProtos: importedLibs.map(
+            (bytes) => FileDescriptorSet.fromBuffer(bytes.descriptorFileBytes)
+                .file
+                .single,
           ),
         );
 
@@ -75,6 +80,10 @@ class PmgRoot extends PdRoot<PmgMsg, PmgFld, PmgEnum> {
       enums.map((e) => '${e.payload.nameUncap},'),
     ),
     ';',
+    'static const importedLibs\$ = <${pmLibCls.nameWithPrefix}>'.andSquare(
+      importedLibs.map((e) => '${e.libInstanceVarName},'),
+    ),
+    ';',
     'static const descriptor\$ = r\'$descriptorJson\';'
         "static const instance\$ = $instanceFileClassName._();",
     ...pmgMessages
@@ -86,13 +95,13 @@ class PmgRoot extends PdRoot<PmgMsg, PmgFld, PmgEnum> {
   late final messageTypeSrc = pmMessageCls.nameWithPrefix;
   late final enumTypeSrc = pmEnumCls.nameWithPrefix;
 
-  late final messageOfType = [
-    'static final messageByType = {',
-    for (final msg in pmgMessages)
-      '${msg.messageClassName}: ${msg.instanceReference},',
-    '}.toIMap();',
-    '${pmMessageOfTypeCls.nameWithPrefix}<T> messageOfType<T extends ${generatedMessageCls.nameWithPrefix}>() => messageByType[T]!.cast();',
-  ];
+  // late final messageOfType = [
+  //   'static final messageByType = {',
+  //   for (final msg in pmgMessages)
+  //     '${msg.messageClassName}: ${msg.instanceReference},',
+  //   '}.toIMap();',
+  //   '${pmMessageOfTypeCls.nameWithPrefix}<T>? messageOfType<T extends ${generatedMessageCls.nameWithPrefix}>() => messageByType[T]?.cast();',
+  // ];
 
   late final instanceLibClassGen = ClassGen(
     name: instanceFileClassName,
@@ -102,8 +111,9 @@ class PmgRoot extends PdRoot<PmgMsg, PmgFld, PmgEnum> {
       'static const instance = ${self.name}._();',
       '${core(List)}<$messageTypeSrc> get messages => $staticFileClassName.messages\$;',
       '${core(List)}<$enumTypeSrc> get enums => $staticFileClassName.enums\$;',
-      '${core(String)} get descriptor => $staticFileClassName.descriptor\$;',
-      ...messageOfType,
+      '${core(List)}<${pmLibCls.nameWithPrefix}> get importedLibs => $staticFileClassName.importedLibs\$;',
+      '${core(String)} get fileDescriptorProtoJson => $staticFileClassName.descriptor\$;',
+      // ...messageOfType,
     ].join().asContent,
   );
 
@@ -114,7 +124,9 @@ class PmgRoot extends PdRoot<PmgMsg, PmgFld, PmgEnum> {
         '// ignore_for_file: unnecessary_this',
         '// ignore_for_file: camel_case_types',
         '// ignore_for_file: camel_case_extensions',
-        'const ${ctx.nameUncap} = $instanceFileClassName.instance;',
+        '// ignore_for_file: unused_field',
+        '// ignore_for_file: unused_import',
+        'const ${ctx.libInstanceVarName} = $instanceFileClassName.instance;',
         staticLibSrc,
         instanceLibSrc,
         pmgMessages.map((e) => e.src).join(),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
 import 'package:mhu_dart_commons/commons.dart';
+import 'package:recase/recase.dart';
 
 import '../protoc.dart';
 import '../source_gen/source_generator.dart';
@@ -30,12 +31,16 @@ Future<void> runProtoMetaGenerator({
     "import '${cwd.pbFile(packageName).filename}';",
     for (final dep in dependencies) "import 'package:$dep/$dep.dart';",
     generateProtoMeta(
-      'MhuLib',
+      packageName,
       await cwd.descriptorSetOut.readAsBytes(),
-      importedDescriptorBytes: [
+      importedLibs: [
         for (final dep in dependencies)
-          await packageRootDir(dep)
-              .then((value) => value.descriptorSetOut.readAsBytes())
+          await packageRootDir(dep).then(
+            (value) async => PmgCtx(
+              await value.descriptorSetOut.readAsBytes(),
+              dep,
+            ),
+          )
       ],
     ),
   ];
@@ -56,12 +61,12 @@ Future<void> runProtoMetaGenerator({
 String generateProtoMeta(
   String name,
   List<int> descriptorFileBytes, {
-  Iterable<List<int>> importedDescriptorBytes = const Iterable.empty(),
+  Iterable<PmgCtx> importedLibs = const Iterable.empty(),
 }) =>
     PmgRoot(
       descriptorFileBytes,
       PmgCtx(descriptorFileBytes, name),
-      importedDescriptorBytes: importedDescriptorBytes,
+      importedLibs: importedLibs,
     ).generate();
 
 const notSet = 'notSet';
@@ -96,10 +101,11 @@ class PmgCtx {
 
   late final protoc = ProtocPlugin(descriptorFileBytes);
 
-  late final nameCap = name.capitalize();
-  late final nameUncap = name.uncapitalize();
+  // late final nameCap = name.capitalize();
+  // late final nameUncap = name.uncapitalize();
 
-  late final libInstanceClassName = nameCap;
+  late final libInstanceClassName = "${name.pascalCase}Lib";
+  late final libInstanceVarName = libInstanceClassName.uncapitalize();
   late final libStaticClassName = "$libInstanceClassName\$";
 
   late final libInstanceClassGen = ClassGen(name: libInstanceClassName);

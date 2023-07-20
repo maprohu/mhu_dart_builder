@@ -57,6 +57,26 @@ class PmgMsg extends TopGen {
 
   late final nestedMessageType = pmMessageCls.nameWithPrefix;
 
+  late final createMethod = [
+    'static $messageClassName create(',
+    fields
+        .map((f) => '${f.typ.withoutNullability}? ${f.name}')
+        .plusCommas
+        .paramsCurly,
+    ') {',
+    'final o = $messageClassName();',
+    for (final f in fields) ...[
+      'if (${f.name} != null) {',
+      switch (f.fld.cardinality) {
+        PdfSingle() => 'o.${f.name} = ${f.name};',
+        _ => 'o.${f.name}.addAll(${f.name});'
+      },
+      '}',
+    ],
+    'return o;',
+    '}',
+  ];
+
   late final staticClassSrc = 'abstract class $staticClassName'.andCurly([
     'const $staticClassName._();',
     'static const index\$ = ${msg.index};',
@@ -83,6 +103,7 @@ class PmgMsg extends TopGen {
       oneOfs.map((e) => '${e.name},'),
     ),
     ';',
+    ...createMethod,
   ]);
 
   // TODO migrate staticClassSrc
@@ -114,6 +135,7 @@ class PmgMsg extends TopGen {
   late final metaClassSrc =
       'class $metaClassName extends $superClass'.andCurly([
     'const $metaClassName();',
+    '${pmLibCls.nameWithPrefix} get pmLib\$ => ${ctx.libInstanceVarName};',
     'final index\$ = $staticClassName.index\$;',
     'final globalIndex\$ = $staticClassName.globalIndex\$;',
     '$messageClassName get emptyMessage\$ => $messageClassName()..freeze();',

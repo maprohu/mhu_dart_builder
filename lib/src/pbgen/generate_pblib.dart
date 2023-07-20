@@ -1,0 +1,126 @@
+import 'dart:io';
+
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
+import 'package:mhu_dart_builder/src/protoc.dart';
+import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
+import 'package:mhu_dart_builder/src/srcgen.dart';
+import 'package:mhu_dart_commons/io.dart';
+import 'package:mhu_dart_proto/mhu_dart_proto.dart';
+import 'package:recase/recase.dart';
+
+import '../resources.dart';
+
+Future<void> runPbLibGenerator({
+  String? packageName,
+  List<String> dependencies = const [],
+  Directory? cwd,
+}) async {
+  cwd ??= Directory.current;
+  packageName ??= await packageNameFromPubspec(cwd);
+
+
+  final metaFile = cwd.pblibFile(packageName);
+
+  final fileDescriptorSet = await cwd.descriptorSetOut
+      .readAsBytes()
+      .then(FileDescriptorSet.fromBuffer);
+
+  final content = generatePbLibDart(
+    package: packageName,
+    importedPackages: dependencies,
+    fileDescriptorSet: fileDescriptorSet,
+  );
+
+  await metaFile.parent.create(recursive: true);
+  await metaFile.writeAsString(
+    content.formattedDartCode(
+          cwd.fileTo(
+            ['.dart_tool', 'mhu', metaFile.filename],
+          ),
+        ),
+  );
+  stdout.writeln(
+    "wrote: ${metaFile.uri}",
+  );
+}
+
+String pblibVarName(String package) => package.camelCase.plus('Lib');
+String generatePbLibDart({
+  required String package,
+  required Iterable<String> importedPackages,
+  required FileDescriptorSet fileDescriptorSet,
+}) {
+  const mdp = r"$mdp";
+  return [
+    "import 'package:mhu_dart_proto/mhu_dart_proto.dart' as $mdp;",
+    "import '$package.pb.dart';",
+    for (final dep in importedPackages) "import '${protoImportUri(dep)}';",
+    "final ${pblibVarName(package)} = $mdp.PbiLib(",
+    "  name: ${package.dartRawSingleQuoteStringLiteral},",
+    "  messages: [",
+    for (final m in fileDescriptorSet.messages) ...[
+      "${m.name}.getDefault().toPbiMessage([",
+      for (final oo in m.oos) oo.dartRawSingleQuoteStringLiteral.plusComma,
+      "]),",
+    ],
+    "  ], enums: [",
+    for (final m in fileDescriptorSet.enums) "$m.values.toPbiEnum,",
+    "  ], importedLibraries: [",
+    for (final dep in importedPackages) pblibVarName(dep).plusComma,
+    "  ],",
+    ");",
+  ].joinLines;
+}
+
+typedef MsgOos = ({
+  String name,
+  Iterable<String> oos,
+});
+
+extension DescriptorProtoX on DescriptorProto {
+  Iterable<MsgOos> messages(IList<String> path) sync* {
+    final newPath = path.add(name);
+    yield (
+      name: newPath.join('_'),
+      oos: oneofDecl.map((e) => e.name),
+    );
+    for (final m in nestedType) {
+      if (m.options.mapEntry) continue;
+      yield* m.messages(newPath);
+    }
+  }
+
+  Iterable<String> enums(IList<String> path) sync* {
+    final newPath = path.add(name);
+    for (final m in enumType) {
+      yield newPath.add(m.name).join('_');
+    }
+    for (final m in nestedType) {
+      if (m.options.mapEntry) continue;
+      yield* m.enums(newPath);
+    }
+  }
+}
+
+extension FileDescriptorSetX on FileDescriptorSet {
+  Iterable<String> get enums sync* {
+    for (final f in file) {
+      for (final e in f.enumType) {
+        yield e.name;
+      }
+      for (final m in f.messageType) {
+        if (m.options.mapEntry) continue;
+        yield* m.enums(IList());
+      }
+    }
+  }
+
+  Iterable<MsgOos> get messages sync* {
+    for (final f in file) {
+      for (final m in f.messageType) {
+        if (m.options.mapEntry) continue;
+        yield* m.messages(IList());
+      }
+    }
+  }
+}

@@ -10,8 +10,9 @@ Future<Directory> packageRootDir(String package) async {
   return Directory(uri.toFilePath()).parent;
 }
 
-Future<String> packageNameFromPubspec() async {
-  final pubSpecYaml = Directory.current.file('pubspec.yaml');
+Future<String> packageNameFromPubspec([Directory? cwd]) async {
+  cwd ??= Directory.current;
+  final pubSpecYaml = cwd.file('pubspec.yaml');
   final pubspec = Pubspec.parse(await pubSpecYaml.readAsString());
   return pubspec.name;
 }

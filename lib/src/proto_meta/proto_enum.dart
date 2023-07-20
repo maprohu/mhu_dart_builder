@@ -1,5 +1,3 @@
-
-
 import 'package:mhu_dart_builder/src/proto_meta/proto_root.dart';
 
 import '../source_gen/source_generator.dart';
@@ -14,8 +12,9 @@ import 'proto_message.dart';
 // final pmEnumCls = ClassGen.fromTypeDynamic(PmEnum).;
 class PmgEnum {
   final PdEnum<PmgMsg, PmgFld, PmgEnum> enm;
+  final PmgCtx ctx;
 
-  PmgEnum.create(this.enm);
+  PmgEnum.create(this.enm, this.ctx);
 
   late final name = enm.name;
 
@@ -34,6 +33,7 @@ class PmgEnum {
   late final metaClassSrc =
       'class $metaClassName extends $metaSuperClass'.andCurly([
     'const $metaClassName._();',
+    '${pmLibCls.nameWithPrefix} get pmLib\$ => ${ctx.libInstanceVarName};',
     'static const instance = $metaClassName._();'
         '${core(List)}<$enumClassName> values() => $enumClassName.values;',
   ]);

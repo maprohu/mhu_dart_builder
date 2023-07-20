@@ -6,25 +6,32 @@ repository: https://github.com/maprohu/mhu_dart_builder
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
+dependency_overrides:
+  mhu_dart_commons:
+    path: ../mhu_dart_commons
+  mhu_dart_proto:
+    path: ../mhu_dart_proto
+
 dependencies:
+  mhu_dart_commons: ^1.0.7
+  mhu_dart_proto: ^1.0.1
+
   path: ^1.8.3
   rxdart: ^0.27.7
   collection: ^1.17.1
   resource_portable:  ^3.0.2
-  analyzer: ^6.0.0
+  analyzer: ^5.13.0
   protoc_plugin:  ^21.0.2
   protobuf:  ^3.0.0
   dart_style: ^2.3.2
   source_gen: ^1.4.0
   pubspec_parse: ^1.2.3
-
-  mhu_dart_commons: ^1.0.7
-#  mhu_dart_commons:
-#    path: ../mhu_dart_commons
-  mhu_dart_proto: ^1.0.1
-#  mhu_dart_proto:
-#    path: ../mhu_dart_proto
+  recase: ^4.1.0
+  freezed_annotation: ^2.4.1
+  fast_immutable_collections: ^9.1.5
 
 dev_dependencies:
   lints: ^2.0.0
   test: ^1.21.0
+  build_runner: ^2.4.6
+  freezed: ^2.4.1

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
 
-import 'proto_meta/proto_meta_generator.dart';
 import 'protoc.dart';
 
 Future<void> runCompleteProtoGenerator({
@@ -17,10 +16,10 @@ Future<void> runCompleteProtoGenerator({
     dependencies: dependencies,
   );
 
-  await runProtoMetaGenerator(
-    packageName: packageName,
-    dependencies: dependencies,
-  );
+  // await runProtoMetaGenerator(
+  //   packageName: packageName,
+  //   dependencies: dependencies,
+  // );
 }
 
 Future<void> generateExportFile({
