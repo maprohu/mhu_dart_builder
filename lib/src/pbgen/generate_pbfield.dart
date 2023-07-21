@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:mhu_dart_builder/src/protoc.dart';
-import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 import 'package:mhu_dart_builder/src/srcgen.dart';
 import 'package:mhu_dart_commons/commons.dart';
 import 'package:mhu_dart_commons/io.dart';
@@ -11,7 +10,7 @@ import 'package:protobuf/protobuf.dart';
 import 'package:recase/recase.dart';
 
 import '../resources.dart';
-import '../source_gen/reflect.dart';
+import '../reflect.dart';
 
 Future<void> runPbFieldGenerator({
   String? packageName,

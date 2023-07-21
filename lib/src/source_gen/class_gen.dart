@@ -9,7 +9,7 @@ import 'gen.dart';
 import 'generic.dart';
 import 'param.dart';
 import 'prop.dart';
-import 'reflect.dart';
+import '../reflect.dart';
 import 'source_generator.dart';
 import 'typ.dart';
 

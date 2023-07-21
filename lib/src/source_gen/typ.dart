@@ -5,7 +5,7 @@ import 'source_generator.dart';
 import 'analyzer.dart';
 import 'class_gen.dart';
 import 'generic.dart';
-import 'reflect.dart';
+import '../reflect.dart';
 
 class Typ {
   final String withoutNullability;

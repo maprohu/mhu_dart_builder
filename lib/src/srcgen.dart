@@ -1,5 +1,6 @@
-import 'package:mhu_dart_builder/mhu_dart_builder.dart';
-import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
+import 'dart:io';
+
+import 'package:dart_style/dart_style.dart';
 
 extension SrcgenIterableOfStringX on Iterable<String> {
   String get joinLines => join('\n');
@@ -53,4 +54,20 @@ extension SrcgenStringX on String {
   String assign(String? value) => sepPlus('=', value).plusSemi;
 
   String get dartRawSingleQuoteStringLiteral => "r'${replaceAll("'", "''")}'";
+
+
+  static final _formatter = DartFormatter();
+
+  String formattedDartCode([File? errorOutput]) {
+    try {
+      return _formatter.format(this);
+    } catch (_) {
+      if (errorOutput != null) {
+        errorOutput.parent.createSync(recursive: true);
+        errorOutput.writeAsStringSync(this);
+        stderr.writeln("error formatting: ${errorOutput.uri}");
+      }
+      rethrow;
+    }
+  }
 }

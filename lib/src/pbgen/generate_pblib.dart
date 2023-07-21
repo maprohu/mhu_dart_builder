@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:mhu_dart_builder/src/protoc.dart';
-import 'package:mhu_dart_builder/src/source_gen/source_generator.dart';
 import 'package:mhu_dart_builder/src/srcgen.dart';
 import 'package:mhu_dart_commons/io.dart';
 import 'package:mhu_dart_proto/mhu_dart_proto.dart';
