@@ -14,10 +14,18 @@ Future<void> runPbLibGenerator({
   String? packageName,
   List<String> dependencies = const [],
   Directory? cwd,
+  bool protoc = true,
 }) async {
   cwd ??= Directory.current;
   packageName ??= await packageNameFromPubspec(cwd);
 
+  if (protoc) {
+    await runProtoc(
+      packageName: packageName,
+      dependencies: dependencies,
+      cwd: cwd,
+    );
+  }
 
   final metaFile = cwd.pblibFile(packageName);
 
@@ -34,42 +42,14 @@ Future<void> runPbLibGenerator({
   await metaFile.parent.create(recursive: true);
   await metaFile.writeAsString(
     content.formattedDartCode(
-          cwd.fileTo(
-            ['.dart_tool', 'mhu', metaFile.filename],
-          ),
-        ),
+      cwd.fileTo(
+        ['.dart_tool', 'mhu', metaFile.filename],
+      ),
+    ),
   );
   stdout.writeln(
     "wrote: ${metaFile.uri}",
   );
-}
-
-String pblibVarName(String package) => package.camelCase.plus('Lib');
-String generatePbLibDart({
-  required String package,
-  required Iterable<String> importedPackages,
-  required FileDescriptorSet fileDescriptorSet,
-}) {
-  const mdp = r"$mdp";
-  return [
-    "import 'package:mhu_dart_proto/mhu_dart_proto.dart' as $mdp;",
-    "import '$package.pb.dart';",
-    for (final dep in importedPackages) "import '${protoImportUri(dep)}';",
-    "final ${pblibVarName(package)} = $mdp.PbiLib(",
-    "  name: ${package.dartRawSingleQuoteStringLiteral},",
-    "  messages: [",
-    for (final m in fileDescriptorSet.messages) ...[
-      "${m.name}.getDefault().toPbiMessage([",
-      for (final oo in m.oos) oo.dartRawSingleQuoteStringLiteral.plusComma,
-      "]),",
-    ],
-    "  ], enums: [",
-    for (final m in fileDescriptorSet.enums) "$m.values.toPbiEnum,",
-    "  ], importedLibraries: [",
-    for (final dep in importedPackages) pblibVarName(dep).plusComma,
-    "  ],",
-    ");",
-  ].joinLines;
 }
 
 typedef MsgOos = ({
@@ -123,4 +103,33 @@ extension FileDescriptorSetX on FileDescriptorSet {
       }
     }
   }
+}
+
+String pblibVarName(String package) => package.camelCase.plus('Lib');
+
+String generatePbLibDart({
+  required String package,
+  required Iterable<String> importedPackages,
+  required FileDescriptorSet fileDescriptorSet,
+}) {
+  const mdp = r"$mdp";
+  return [
+    "import 'package:mhu_dart_proto/mhu_dart_proto.dart' as $mdp;",
+    "import '$package.pb.dart';",
+    for (final dep in importedPackages) "import '${protoImportUri(dep)}';",
+    "final ${pblibVarName(package)} = $mdp.PbiLib(",
+    "  name: ${package.dartRawSingleQuoteStringLiteral},",
+    "  messages: [",
+    for (final m in fileDescriptorSet.messages) ...[
+      "${m.name}.getDefault().toPbiMessage([",
+      for (final oo in m.oos) oo.dartRawSingleQuoteStringLiteral.plusComma,
+      "]),",
+    ],
+    "  ], enums: [",
+    for (final m in fileDescriptorSet.enums) "$m.values.toPbiEnum,",
+    "  ], importedLibraries: [",
+    for (final dep in importedPackages) pblibVarName(dep).plusComma,
+    "  ],",
+    ");",
+  ].joinLines;
 }

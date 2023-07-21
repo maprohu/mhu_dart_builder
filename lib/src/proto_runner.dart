@@ -1,26 +1,27 @@
 import 'dart:io';
 
+import 'package:mhu_dart_builder/mhu_dart_builder.dart';
 import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
 
 import 'protoc.dart';
 
-Future<void> runCompleteProtoGenerator({
-  String? packageName,
-  List<String> dependencies = const [],
-}) async {
-  packageName ??= await packageNameFromPubspec();
-
-  await runProtoc(
-    packageName: packageName,
-    dependencies: dependencies,
-  );
-
-  // await runProtoMetaGenerator(
-  //   packageName: packageName,
-  //   dependencies: dependencies,
-  // );
-}
+// Future<void> runCompleteProtoGenerator({
+//   String? packageName,
+//   List<String> dependencies = const [],
+// }) async {
+//   packageName ??= await packageNameFromPubspec();
+//
+//   await runProtoc(
+//     packageName: packageName,
+//     dependencies: dependencies,
+//   );
+//
+//   await runPbLibGenerator(
+//     packageName: packageName,
+//     dependencies: dependencies,
+//   );
+// }
 
 Future<void> generateExportFile({
   String? packageName,
