@@ -1,15 +1,13 @@
-import 'package:collection/collection.dart';
 import 'package:model_a/src/generated/model_a.pb.dart';
-import 'package:protobuf/protobuf.dart';
 
 import 'src/generated/model_a.pbfield.dart';
 
 void main() {
   final a = MsgA();
 
-  final bi = a.info_;
+  // final bi = a.info_;
 
-  final GeneratedMessage gm = a;
+  // final GeneratedMessage gm = a;
 
   MsgA$.fldMessage.set(a, MsgB());
 

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:mhu_dart_builder/src/protoc.dart';
-import 'package:mhu_dart_commons/io.dart';
 import 'package:mhu_dart_proto/mhu_dart_proto.dart';
 
 final modelAname = 'model_a';

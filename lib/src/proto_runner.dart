@@ -1,10 +1,8 @@
 import 'dart:io';
 
-import 'package:mhu_dart_builder/mhu_dart_builder.dart';
 import 'package:mhu_dart_builder/src/resources.dart';
 import 'package:mhu_dart_commons/io.dart';
 
-import 'protoc.dart';
 
 // Future<void> runCompleteProtoGenerator({
 //   String? packageName,

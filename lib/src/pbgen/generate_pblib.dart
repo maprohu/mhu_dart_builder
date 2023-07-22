@@ -53,6 +53,7 @@ Future<void> runPbLibGenerator({
 
 typedef MsgOos = ({
   String name,
+  DescriptorProto decriptor,
   Iterable<String> oos,
 });
 
@@ -61,6 +62,7 @@ extension DescriptorProtoX on DescriptorProto {
     final newPath = path.add(name);
     yield (
       name: newPath.join('_'),
+      decriptor: this,
       oos: oneofDecl.map((e) => e.name),
     );
     for (final m in nestedType) {
@@ -120,9 +122,20 @@ String generatePbLibDart({
     "  name: ${package.dartRawSingleQuoteStringLiteral},",
     "  messages: [",
     for (final m in fileDescriptorSet.messages) ...[
-      "${m.name}.getDefault().toPbiMessage([",
-      for (final oo in m.oos) oo.dartRawSingleQuoteStringLiteral.plusComma,
-      "]),",
+      "${m.name}.getDefault().toPbiMessage(",
+      "oneofs: [",
+      for (final oo in m.oos) ...[
+        "$mdp.PbiOneof(",
+        "name: ",
+        oo.dartRawSingleQuoteStringLiteral.plusComma,
+        "which: ",
+        "${m.name}_${oo.pascalCase}.values,",
+        "),",
+      ],
+      "],",
+      "tags: [",
+      for (final f in m.decriptor.field) f.number.toString().plusComma,
+      "],),",
     ],
     "  ], enums: [",
     for (final m in fileDescriptorSet.enums) "$m.values.toPbiEnum,",

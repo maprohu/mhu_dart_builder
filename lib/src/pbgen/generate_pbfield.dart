@@ -101,7 +101,7 @@ String generatePbFieldDart({
       // OneOfs
       ...msg.oneofs.mapIndexed(
         (index, oo) =>
-            'static final ${oo.camelCase} = ${oogen(msg, index, oo)};',
+            'static final ${oo.name.camelCase} = ${oogen(msg, index, oo.name)};',
       ),
       // create method
       'static ${msg.className} create(',
@@ -261,12 +261,15 @@ Iterable<String> _oneofs(PbiMessage msg) {
     String optClsFor(FieldInfo field) => baseClassName.plus(field.name);
     Iterable<String> option(FieldInfo field) {
       final optCls = optClsFor(field);
+      final valueType = field.access().valueType;
       return [
-        'class $optCls extends $baseClassName'.plusCurlyLines([
-          'final ${field.access().valueType} value;',
+        'class $optCls ',
+        'extends $baseClassName ',
+        'with $_mdc.${nm(HolderMixin)}<$valueType>'.plusCurlyLines([
+          'final $valueType value;',
           'const $optCls(this.value);',
-          if (field.name != 'value')
-            '${field.access().valueType} get ${field.name} => value;',
+          if (field.name != 'value') '$valueType get ${field.name} => value;',
+          'int get tagNumber\$ => ${field.tagNumber};'
         ]),
       ];
     }
@@ -276,11 +279,14 @@ Iterable<String> _oneofs(PbiMessage msg) {
       oneofIndex: oneofIndex,
     );
     return [
-      'sealed class $baseClassName'.plusCurlyLines([
+      'sealed class $baseClassName implements $_mdp.${nm(PbWhich)}'
+          .plusCurlyLines([
         'const $baseClassName();',
       ]),
       'class $notSetCls extends $baseClassName'.plusCurlyLines([
-        'const $notSetCls();',
+        'const $notSetCls._();',
+        'static const instance = $notSetCls._();',
+        'int get tagNumber\$ => 0;'
       ]),
       for (final field in fields) ...option(field),
       'extension \$$baseClassName\$Ext on ${msg.className}'.plusCurlyLines([
@@ -289,7 +295,7 @@ Iterable<String> _oneofs(PbiMessage msg) {
         ]).plusCurlyLines([
           for (final field in fields)
             '$enumClsName.${field.name} => ${optClsFor(field)}(${field.name}),',
-          '$enumClsName.notSet => const $notSetCls(),',
+          '$enumClsName.notSet => $notSetCls.instance,',
         ]).plusSemi,
       ]),
     ];
@@ -298,7 +304,7 @@ Iterable<String> _oneofs(PbiMessage msg) {
   return [
     ...msg.oneofs.expandIndexed(
       (index, element) => oneof(
-        oneofName: element,
+        oneofName: element.name,
         oneofIndex: index,
       ),
     ),

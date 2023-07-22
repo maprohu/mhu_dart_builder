@@ -49,3 +49,9 @@ enum E0 {
 }
 
 
+message OrderTest {
+  int32 t2 = 2;
+  int32 t8 = 8;
+  int32 t1 = 1;
+  int32 t3 = 3;
+}

@@ -15,8 +15,7 @@ dependencies:
   protobuf: ^3.0.0
   fixnum: ^1.1.0
   collection: ^1.17.2
-  mhu_dart_proto:
-    path: ../../../mhu_dart_proto
+  mhu_dart_proto: ^1.0.1
   mhu_dart_commons: ^1.0.7
 
 
