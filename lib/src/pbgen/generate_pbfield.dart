@@ -79,11 +79,12 @@ String generatePbFieldDart({
 
   String oogen(PbiMessage msg, int oneofIndex, String name) {
     final msgCls = msg.className;
+    final enumCls = '${msgCls}_${name.pascalCase}';
     return [
-      "$_mdp.OneofFieldAccess(",
+      "$_mdp.${nm(OneofFieldAccess)}<$msgCls, $enumCls>(",
       "oneofIndex: $oneofIndex,",
       "builderInfo: $msgCls.getDefault().info_,",
-      "options: ${msgCls}_${name.pascalCase}.values,"
+      "options: $enumCls.values,"
           ")",
     ].joinLines;
   }
