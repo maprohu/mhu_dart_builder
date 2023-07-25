@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:mhu_dart_builder/src/protoc.dart';
 import 'package:mhu_dart_builder/src/srcgen.dart';
 import 'package:mhu_dart_commons/commons.dart';
@@ -43,27 +44,33 @@ Future<void> runPbFieldGenerator({
 extension _PbiMessageX<M extends GeneratedMessage> on PbiMessage<M> {
   String get className => instance.runtimeType.toString();
 
-  List<FieldInfo> get fields => builderInfo.byIndex;
+  IList<PbiConcreteFieldCalc> get fields =>
+      calc.concreteFieldCalcsInDescriptorOrder;
 
-  Iterable<FieldAccess> get fieldAccesses => fields.map((e) => e.access());
+  Iterable<FieldAccess> get fieldAccesses => fields.map(
+        (e) => ConcreteFieldKey(
+          messageType: messageType,
+          tagNumber: e.tagNumber,
+        ).calc.access,
+      );
 }
 
 const _mdc = r"$mdc";
 const _mdp = r"$mdp";
 
-String _field(PbiMessage msg, FieldInfo fld) =>
+String _field(PbiMessage msg, PbiConcreteFieldCalc fld) =>
     '${msg.className}\$.${fld.name}';
 
 String generatePbFieldDart({
   required String package,
   required PbiLib lib,
 }) {
-  String fldgen(PbiMessage msg, FieldInfo fieldInfo) {
-    final access = fieldInfo.accessForMessage(msg);
+  String fldgen(PbiMessage msg, PbiConcreteFieldCalc calc) {
+    final access = calc.access;
     final msgCls = msg.className;
 
     final fieldInfoRef =
-        "$msgCls.getDefault().info_.byIndex[${fieldInfo.index}].cast()";
+        "$msgCls.getDefault().info_.byIndex[${calc.fieldInfo.index}].cast()";
 
     final accessClassName = access.runtimeType;
 
@@ -72,11 +79,12 @@ String generatePbFieldDart({
 
   String oogen(PbiMessage msg, int oneofIndex, String name) {
     final msgCls = msg.className;
+    final enumCls = '${msgCls}_${name.pascalCase}';
     return [
-      "$_mdp.OneofFieldAccess(",
+      "$_mdp.${nm(OneofFieldAccess)}<$msgCls, $enumCls>(",
       "oneofIndex: $oneofIndex,",
       "builderInfo: $msgCls.getDefault().info_,",
-      "options: ${msgCls}_${name.pascalCase}.values,"
+      "options: $enumCls.values,"
           ")",
     ].joinLines;
   }
@@ -132,8 +140,8 @@ String generatePbFieldDart({
     ],
     for (final msg in lib.messages) ...[
       'extension ${msg.className}\$Ext on ${msg.className} {',
-      for (final fld in msg.fields) ...[
-        if (fld.access() case ScalarFieldAccess(:final valueType)) ...[
+      for (final fld in msg.calc.concreteFieldCalcsInDescriptorOrder) ...[
+        if (fld.access case ScalarFieldAccess(:final valueType)) ...[
           '$valueType? get ${fld.name}Opt',
           ' => ',
           '${msg.className}\$.${fld.name}.getOpt(this);',
@@ -147,13 +155,13 @@ String generatePbFieldDart({
 }
 
 enum _Access {
-  FR,
-  FW,
+  fr,
+  fw,
 }
 
 enum _Cardinality {
-  MAP,
-  LIST,
+  map,
+  list,
 }
 
 Iterable<String> _frpMsg(PbiMessage msg) {
@@ -162,10 +170,10 @@ Iterable<String> _frpMsg(PbiMessage msg) {
 
   String wrap(
     _Access access,
-    FieldInfo fld,
+    PbiConcreteFieldCalc fld,
     Type singleValueType,
   ) {
-    return fld.access().isMessageValue
+    return fld.access.isMessageValue
         ? "$singleValueType\$${access.name.pascalCase}.new"
         : "$_mdp.bare${access.name.pascalCase}<$singleValueType>";
   }
@@ -173,7 +181,7 @@ Iterable<String> _frpMsg(PbiMessage msg) {
   String multi(
     _Access access,
     _Cardinality cardinality,
-    FieldInfo fld,
+    PbiConcreteFieldCalc fld,
     Type singleValueType,
   ) {
     return 'this.${cardinality.name.toLowerCase()}\$'.plusParenLines([
@@ -186,7 +194,7 @@ Iterable<String> _frpMsg(PbiMessage msg) {
     'extension ${msg.className}\$ExtFw on $_mdc.Fw<${msg.className}>'
         .plusCurlyLines([
       for (final fld in msg.fields) ...[
-        if (fld.access() case ScalarFieldAccess(:final valueType))
+        if (fld.access case ScalarFieldAccess(:final valueType))
           'set ${fld.name}'.plusParenLines([
             '$valueType value',
           ]).plusCurlyLines([
@@ -199,20 +207,20 @@ Iterable<String> _frpMsg(PbiMessage msg) {
           '$frCls(this.fv\$, {super.disposers,});',
       for (final fld in msg.fields) ...[
         'late final ${fld.name} =',
-        switch (fld.access()) {
+        switch (fld.access) {
           ScalarFieldAccess(:final singleValueType) => 'fr\$'.plusParenLines([
               _field(msg, fld).plusComma,
-              wrap(_Access.FR, fld, singleValueType).plusComma,
+              wrap(_Access.fr, fld, singleValueType).plusComma,
             ]),
           RepeatedFieldAccess(:final singleValueType) => multi(
-              _Access.FR,
-              _Cardinality.LIST,
+              _Access.fr,
+              _Cardinality.list,
               fld,
               singleValueType,
             ),
           MapFieldAccess(:final singleValueType) => multi(
-              _Access.FR,
-              _Cardinality.MAP,
+              _Access.fr,
+              _Cardinality.map,
               fld,
               singleValueType,
             ),
@@ -225,20 +233,20 @@ Iterable<String> _frpMsg(PbiMessage msg) {
           '$fwCls(this.fv\$, {super.disposers,});',
       for (final fld in msg.fields) ...[
         'late final ${fld.name} =',
-        switch (fld.access()) {
+        switch (fld.access) {
           ScalarFieldAccess(:final singleValueType) => 'fw\$'.plusParenLines([
               _field(msg, fld).plusComma,
-              wrap(_Access.FW, fld, singleValueType).plusComma,
+              wrap(_Access.fw, fld, singleValueType).plusComma,
             ]),
           RepeatedFieldAccess(:final singleValueType) => multi(
-              _Access.FW,
-              _Cardinality.LIST,
+              _Access.fw,
+              _Cardinality.list,
               fld,
               singleValueType,
             ),
           MapFieldAccess(:final singleValueType) => multi(
-              _Access.FW,
-              _Cardinality.MAP,
+              _Access.fw,
+              _Cardinality.map,
               fld,
               singleValueType,
             ),
@@ -250,34 +258,29 @@ Iterable<String> _frpMsg(PbiMessage msg) {
 }
 
 Iterable<String> _oneofs(PbiMessage msg) {
-  Iterable<String> oneof({
-    required String oneofName,
-    required int oneofIndex,
-  }) {
+  Iterable<String> oneof(PbiOneofCalc calc) {
+    final oneofName = calc.name;
     final enumClsName = '${msg.className}_${oneofName.pascalCase}';
     final baseClassName = enumClsName.plusDollar;
     final notSetCls = baseClassName.plus('notSet\$');
 
-    String optClsFor(FieldInfo field) => baseClassName.plus(field.name);
-    Iterable<String> option(FieldInfo field) {
-      final optCls = optClsFor(field);
-      final valueType = field.access().valueType;
+    String optClsFor(ScalarFieldAccess field) => baseClassName.plus(field.name);
+    Iterable<String> option(ScalarFieldAccess access) {
+      final optCls = optClsFor(access);
+      final valueType = access.valueType;
       return [
         'class $optCls ',
         'extends $baseClassName ',
         'with $_mdc.${nm(HolderMixin)}<$valueType>'.plusCurlyLines([
           'final $valueType value;',
           'const $optCls(this.value);',
-          if (field.name != 'value') '$valueType get ${field.name} => value;',
-          'int get tagNumber\$ => ${field.tagNumber};'
+          if (access.name != 'value') '$valueType get ${access.name} => value;',
+          'int get tagNumber\$ => ${access.tagNumber};'
         ]),
       ];
     }
 
-    final fields = listOneofFields(
-      builderInfo: msg.builderInfo,
-      oneofIndex: oneofIndex,
-    );
+    final fields = calc.fieldsInDescriptorOrder;
     return [
       'sealed class $baseClassName implements $_mdp.${nm(PbWhich)}'
           .plusCurlyLines([
@@ -302,11 +305,6 @@ Iterable<String> _oneofs(PbiMessage msg) {
   }
 
   return [
-    ...msg.oneofs.expandIndexed(
-      (index, element) => oneof(
-        oneofName: element.name,
-        oneofIndex: index,
-      ),
-    ),
+    ...msg.calc.oneofFieldCalcs.expand(oneof),
   ];
 }

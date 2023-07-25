@@ -20,8 +20,6 @@ extension ProtocDirectoryX on Directory {
 
   File pbenumFile(String package) => dartOut.file('$package.pbenum.dart');
 
-  File pbmetaFile(String package) => dartOut.file('$package.pbmeta.dart');
-
   File pblibFile(String package) => dartOut.file('$package.pblib.dart');
 
   File pbfieldFile(String package) => dartOut.file('$package.pbfield.dart');
