@@ -155,13 +155,13 @@ String generatePbFieldDart({
 }
 
 enum _Access {
-  FR,
-  FW,
+  fr,
+  fw,
 }
 
 enum _Cardinality {
-  MAP,
-  LIST,
+  map,
+  list,
 }
 
 Iterable<String> _frpMsg(PbiMessage msg) {
@@ -210,17 +210,17 @@ Iterable<String> _frpMsg(PbiMessage msg) {
         switch (fld.access) {
           ScalarFieldAccess(:final singleValueType) => 'fr\$'.plusParenLines([
               _field(msg, fld).plusComma,
-              wrap(_Access.FR, fld, singleValueType).plusComma,
+              wrap(_Access.fr, fld, singleValueType).plusComma,
             ]),
           RepeatedFieldAccess(:final singleValueType) => multi(
-              _Access.FR,
-              _Cardinality.LIST,
+              _Access.fr,
+              _Cardinality.list,
               fld,
               singleValueType,
             ),
           MapFieldAccess(:final singleValueType) => multi(
-              _Access.FR,
-              _Cardinality.MAP,
+              _Access.fr,
+              _Cardinality.map,
               fld,
               singleValueType,
             ),
@@ -236,17 +236,17 @@ Iterable<String> _frpMsg(PbiMessage msg) {
         switch (fld.access) {
           ScalarFieldAccess(:final singleValueType) => 'fw\$'.plusParenLines([
               _field(msg, fld).plusComma,
-              wrap(_Access.FW, fld, singleValueType).plusComma,
+              wrap(_Access.fw, fld, singleValueType).plusComma,
             ]),
           RepeatedFieldAccess(:final singleValueType) => multi(
-              _Access.FW,
-              _Cardinality.LIST,
+              _Access.fw,
+              _Cardinality.list,
               fld,
               singleValueType,
             ),
           MapFieldAccess(:final singleValueType) => multi(
-              _Access.FW,
-              _Cardinality.MAP,
+              _Access.fw,
+              _Cardinality.map,
               fld,
               singleValueType,
             ),
