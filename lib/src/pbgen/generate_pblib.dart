@@ -125,7 +125,7 @@ String generatePbLibDart({
       "${m.name}.getDefault().toPbiMessage(",
       "oneofs: [",
       for (final oo in m.oos) ...[
-        "$mdp.PbiOneof(",
+        "const $mdp.PbiOneof(",
         "name: ",
         oo.dartRawSingleQuoteStringLiteral.plusComma,
         "which: ",
