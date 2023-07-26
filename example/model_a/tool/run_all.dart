@@ -9,7 +9,7 @@ Future<void> main() async {
 
   Directory.current.run(
     'dart',
-    ['tool/pbfield_model_a.dart'],
+    ['tool/run_pbfield.dart'],
   );
 
 }
