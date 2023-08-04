@@ -1,4 +1,5 @@
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
@@ -66,27 +67,36 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
         .values
         .toList();
 
-    final className = "Composed${element.displayName}";
+    final className = element.displayName;
+    final name = className.camelCase;
+    final composedClassName = "Composed$className";
+    final params = element.parametersDart;
+    final args = element.argumentsDart;
 
-    "class $className${element.parametersDart}"
-        .plus(" implements ${element.displayName}${element.argumentsDart}")
+    "class $composedClassName$params"
+        .plus(" extends $className$args")
         .plusCurlyLines([
       ...mthds.map((e) {
         return "@override final ${e.type} ${e.name};";
       }),
-      "const $className"
+      composedClassName
           .plusParen(
-            mthds.map((e) => "required this.${e.name},").joinInCurlyOrEmpty(""),
+            mthds
+                .map(
+                  (e) =>
+                      (e.nullable ? "" : "required ").plus("this.${e.name},"),
+                )
+                .joinInCurlyOrEmpty(""),
           )
           .plusSemi,
       for (final iface in ifaces.whereNot((e) => e.single))
-        className.plusDot
+        composedClassName.plusDot
             .plus(iface.name.camelCase)
             .plusParen([
               "required ${iface.type} ${iface.name.camelCase},",
-              ...mthds
-                  .whereNot((m) => iface.methodNames.contains(m.name))
-                  .map((mthd) => "required this.${mthd.name},"),
+              ...mthds.whereNot((m) => iface.methodNames.contains(m.name)).map(
+                  (mthd) => (mthd.nullable ? "" : "required ")
+                      .plus("this.${mthd.name},")),
             ].joinLinesInCurlyOrEmpty)
             .plus(
               mthds
@@ -98,6 +108,26 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
                   .joinEnclosedOrEmpty(":", "", ','),
             )
             .plusSemi,
+    ]).also(out);
+
+    final delegateFieldName = "${name}Delegate";
+    final mixinName = "Delegated${className}Mixin";
+    final delegatedName = "Delegated$className";
+    "mixin $mixinName$params"
+        .plus(" implements $className$args")
+        .plusCurlyLines([
+      "$className$args get $delegateFieldName;",
+      ...mthds.map((e) {
+        return "@override ${e.type} get ${e.name} => $delegateFieldName.${e.name};";
+      }),
+    ]).also(out);
+    "class $delegatedName$params with $mixinName$args".plusCurlyLines([
+      "@override final $className$args $delegateFieldName;",
+      delegatedName
+          .plusParen(
+            "this.$delegateFieldName",
+          )
+          .plusSemi,
     ]).also(out);
 
     return output.joinLines;
@@ -140,10 +170,12 @@ extension ElementX on Element {
 class Mthd {
   final String type;
   final String name;
+  final bool nullable;
 
   const Mthd({
     required this.type,
     required this.name,
+    required this.nullable,
   });
 }
 
@@ -169,6 +201,8 @@ extension InterfaceTypeX on InterfaceType {
   Mthd get singleMethod => Mthd(
         type: getDisplayString(withNullability: false).withoutHas,
         name: element.name.withoutHas.camelCase,
+        nullable: accessors.first.declaration.returnType.nullabilitySuffix ==
+            NullabilitySuffix.question,
       );
 
   Iterable<Mthd> get collectMethods sync* {
