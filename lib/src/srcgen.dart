@@ -28,6 +28,8 @@ extension SrcgenStringX on String {
 
   String get inCurly => "{$this}";
 
+  String get inChevron => "<$this>";
+
   String get inParen => "($this)";
 
   String plusCurly([String content = '']) => plus(content.inCurly);
@@ -42,6 +44,7 @@ extension SrcgenStringX on String {
   String get plusComma => plus(r',');
 
   String get plusSemi => plus(r';');
+  String get plusDot => plus(r'.');
 
   String spacePlus(String? value) => sepPlus(' ', value);
 
@@ -69,5 +72,14 @@ extension SrcgenStringX on String {
       }
       rethrow;
     }
+  }
+
+  String removePrefixes(List<String> prefixes) {
+    for (final prefix in prefixes) {
+      if (startsWith(prefix)) {
+        return substring(prefix.length);
+      }
+    }
+    return this;
   }
 }

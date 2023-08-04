@@ -8,4 +8,5 @@ pubspec.lock
 *.iml
 generated/
 *.freezed.dart
+*.g.*.dart
 *.g.dart
