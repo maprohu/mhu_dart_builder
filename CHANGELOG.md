@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Has/Composed generator
+
 ## 1.0.3
 
 - adding a missing 'const' in the generated pblib code to keep the analyzer happy

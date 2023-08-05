@@ -1,20 +1,20 @@
 name: mhu_dart_builder
-version: 1.0.3
+version: 1.0.4
 description: Common tools used in the build process of my Dart and Flutter projects
 repository: https://github.com/maprohu/mhu_dart_builder
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
-dependency_overrides:
-  mhu_dart_commons:
-    path: ../mhu_dart_commons
-  mhu_dart_proto:
-    path: ../mhu_dart_proto
+#dependency_overrides:
+#  mhu_dart_commons:
+#    path: ../mhu_dart_commons
+#  mhu_dart_proto:
+#    path: ../mhu_dart_proto
 
 dependencies:
-  mhu_dart_commons: ^1.0.8
-  mhu_dart_proto: ^1.0.2
+  mhu_dart_commons: ^1.0.9
+  mhu_dart_proto: ^1.0.3
 
   path: ^1.8.3
   rxdart: ^0.27.7

@@ -1,8 +1,8 @@
 import 'package:mhu_dart_commons/commons.dart';
 
 part 'delegate_example.g.has.dart';
-part 'delegate_example.g.compose.dart';
 
+part 'delegate_example.g.compose.dart';
 
 @Has()
 typedef ReadValue<T extends Object> = T Function();
@@ -13,8 +13,11 @@ typedef WriteValue<T> = void Function(T value);
 @Has()
 typedef WatchValue<T> = void Function(T value);
 
+void _noop() {}
+
 @Has()
-typedef SaveValue = void Function()?;
+@HasDefault(_noop)
+typedef SaveValue = void Function();
 
 @Compose()
 abstract class ReadWrite<T extends Object>
@@ -31,6 +34,3 @@ abstract class ReadWriteSave<T extends Object>
 @Compose()
 abstract class IfaceOnly<T extends Object>
     implements ReadWrite<T>, ReadSave<T> {}
-
-
-
