@@ -5,11 +5,11 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 
-#dependency_overrides:
-#  mhu_dart_commons:
-#    path: ../../mhu_dart_commons
-#  mhu_dart_proto:
-#    path: ../../mhu_dart_proto
+dependency_overrides:
+  mhu_dart_commons:
+    path: ../../mhu_dart_commons
+  mhu_dart_proto:
+    path: ../../mhu_dart_proto
 
 dependencies:
   protobuf: ^3.0.0

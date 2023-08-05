@@ -34,3 +34,11 @@ abstract class ReadWriteSave<T extends Object>
 @Compose()
 abstract class IfaceOnly<T extends Object>
     implements ReadWrite<T>, ReadSave<T> {}
+
+
+abstract class Merge1 implements HasReadValue {}
+abstract class Merge2 implements HasWriteValue {}
+@Compose()
+abstract class Merge implements Merge1, Merge2, HasWatchValue {}
+
+

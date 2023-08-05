@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
+
 // ignore: implementation_imports
 import 'package:analyzer/src/dart/constant/value.dart';
 import 'package:build/build.dart';
@@ -73,17 +76,6 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
       "$name$args get ${name.camelCase} => ${name.camelCase}$suffixOfIndirect();"
     ]).also(out);
 
-    // final defaultConst = annotation.objectValue.getField("defaultConst")!;
-    // if (!defaultConst.isNull) {
-    //   final alias = element as TypeAliasElement;
-    //   final notNullType = alias.aliasedType.getDisplayString(withNullability: false);
-    //   final value = (defaultConst as DartObjectImpl).state.toString();
-    //   "extension $prefixOfHas$name\$Ext$params on $prefixOfHas$name$args"
-    //       .plusCurlyLines([
-    //     "$notNullType get ${name.camelCase}$suffixOfEffective => ${name.camelCase} ?? $value;"
-    //   ]).also(out);
-    // }
-
     return output.joinLines;
   }
 }
@@ -137,6 +129,45 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     final params = element.parametersDart;
     final args = element.argumentsDart;
 
+    Iterable<String> merge() {
+      final multis = ifaces.whereNot((e) => e.single).toList();
+      if (multis.length <= 1) {
+        return const [];
+      }
+      final sumEach = multis.map((e) => e.methodNames.length).sum;
+      final setTogether = multis.expand((e) => e.methodNames).toSet();
+      final sumTogether = setTogether.length;
+
+      if (sumEach != sumTogether) {
+        return const [];
+      }
+
+      final singles = ifaces
+          .where((e) => e.single && !setTogether.contains(e.methodNames.first))
+          .expand((element) => element.methods);
+
+      return [
+        composedClassName.plusDot
+            .plus(r"merge$")
+            .plusParen([
+              ...multis.map(
+                (iface) => "required ${iface.type} ${iface.name.camelCase},",
+              ),
+              ...singles.map((e) => e.thisParam)
+            ].joinLinesInCurlyOrEmpty)
+            .plus(
+              multis
+                  .expand((iface) => iface.methods.map((e) => (iface: iface, mthd: e)))
+                  .map(
+                    (im) =>
+                        "${im.mthd.name} = ${im.iface.name.camelCase}.${im.mthd.name}",
+                  )
+                  .joinEnclosedOrEmpty(":", "", ','),
+            )
+            .plusSemi,
+      ];
+    }
+
     "base class $composedClassName$params"
         .plus(" extends $className$args")
         .plusCurlyLines([
@@ -171,6 +202,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
                   .joinEnclosedOrEmpty(":", "", ','),
             )
             .plusSemi,
+      ...merge(),
     ]).also(out);
 
     final delegateFieldName = "${name}Delegate";
