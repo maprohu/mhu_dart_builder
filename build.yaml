@@ -12,4 +12,9 @@ builders:
     build_extensions: {".dart": [".g.compose.dart"]}
     auto_apply: none
     build_to: source
-#    applies_builders: ["source_gen:combining_builder"]
+
+targets:
+  $default:
+    sources:
+      exclude:
+        - example/**/*
