@@ -1,13 +1,13 @@
 builders:
   delegate_has_class_builder:
-    import: "package:mhu_dart_builder/src/delegate/delegate.dart"
+    import: "package:mhu_dart_builder/src/has_compose/has_compose.dart"
     builder_factories: ["delegateHasClassBuilder"]
     build_extensions: {".dart": [".g.has.dart"]}
     auto_apply: dependents
     build_to: source
     applies_builders: [":delegate_compose_builder"]
   delegate_compose_builder:
-    import: "package:mhu_dart_builder/src/delegate/delegate.dart"
+    import: "package:mhu_dart_builder/src/has_compose/has_compose.dart"
     builder_factories: ["delegateComposeBuilder"]
     build_extensions: {".dart": [".g.compose.dart"]}
     auto_apply: none

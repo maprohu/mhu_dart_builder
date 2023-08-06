@@ -1,95 +1,9 @@
-import 'dart:math';
-
-import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
-import 'package:analyzer/dart/element/type.dart';
-
-// ignore: implementation_imports
-import 'package:analyzer/src/dart/constant/value.dart';
-import 'package:build/build.dart';
-import 'package:collection/collection.dart';
-import 'package:mhu_dart_builder/mhu_dart_builder.dart';
-import 'package:mhu_dart_commons/commons.dart';
-import 'package:recase/recase.dart';
-import 'package:source_gen/source_gen.dart';
-
-Builder delegateHasClassBuilder(BuilderOptions options) => PartBuilder(
-      [DelegateHasClassGenerator()],
-      '.g.has.dart',
-    );
+part of 'has_compose.dart';
 
 Builder delegateComposeBuilder(BuilderOptions options) => PartBuilder(
       [DelegateComposeGenerator()],
       '.g.compose.dart',
     );
-
-final checkerHasDefault = TypeChecker.fromRuntime(HasDefault);
-
-extension ElementX on Element {
-  String get hasName => "$prefixOfHas$displayName";
-
-  String? get defaultValue {
-    final hasDefault = checkerHasDefault.firstAnnotationOf(this);
-    if (hasDefault == null) {
-      return null;
-    }
-    return ConstantReader(hasDefault).defaultValue;
-  }
-}
-
-class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
-  @override
-  generateForAnnotatedElement(
-    Element element,
-    ConstantReader annotation,
-    buildStep,
-  ) {
-    element as TypeParameterizedElement;
-
-    var output = <String>[];
-    void out(String str) => output.add(str);
-
-    final name = element.displayName;
-    final params = element.parametersDart;
-    final args = element.argumentsDart;
-    final indirectName = "$name$suffixOfIndirect";
-
-    void hasClass(String name) {
-      final camelName = name.camelCase;
-
-      "abstract class $prefixOfHas$name$params".plusCurlyLines([
-        "$name$args get $camelName;",
-      ]).also(out);
-    }
-
-    final defaultValue = element.defaultValue;
-    if (defaultValue != null) {
-      "@HasDefault($defaultValue)".also(out);
-    }
-
-    hasClass(name);
-    "typedef $indirectName$params = $name$args Function();".also(out);
-    hasClass(indirectName);
-
-    "extension $prefixOfHas$indirectName\$Ext$params on $prefixOfHas$indirectName$args"
-        .plusCurlyLines([
-      "$name$args get ${name.camelCase} => ${name.camelCase}$suffixOfIndirect();"
-    ]).also(out);
-
-    return output.joinLines;
-  }
-}
-
-extension ConstantReaderX on ConstantReader {
-  String? get defaultValue {
-    final defaultConst = objectValue.getField("value")!;
-    if (!defaultConst.isNull) {
-      return (defaultConst as DartObjectImpl).state.toString();
-    } else {
-      return null;
-    }
-  }
-}
 
 class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
   @override
@@ -130,21 +44,18 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     final args = element.argumentsDart;
 
     Iterable<String> merge() {
-      final multis = ifaces.whereNot((e) => e.single).toList();
+      final multis = <Iface>[];
+      final multiNames = <String>{};
+
+      for (final iface in ifaces) {
+        if (iface.single) break;
+        if (multiNames.intersectsWith(iface.methodNames)) break;
+        multis.add(iface);
+        multiNames.addAll(iface.methodNames);
+      }
       if (multis.length <= 1) {
         return const [];
       }
-      final sumEach = multis.map((e) => e.methodNames.length).sum;
-      final setTogether = multis.expand((e) => e.methodNames).toSet();
-      final sumTogether = setTogether.length;
-
-      if (sumEach != sumTogether) {
-        return const [];
-      }
-
-      final singles = ifaces
-          .where((e) => e.single && !setTogether.contains(e.methodNames.first))
-          .expand((element) => element.methods);
 
       return [
         composedClassName.plusDot
@@ -153,11 +64,14 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
               ...multis.map(
                 (iface) => "required ${iface.type} ${iface.name.camelCase},",
               ),
-              ...singles.map((e) => e.thisParam)
+              ...mthds
+                  .whereNot((m) => multiNames.contains(m.name))
+                  .map((mthd) => mthd.thisParam),
             ].joinLinesInCurlyOrEmpty)
             .plus(
               multis
-                  .expand((iface) => iface.methods.map((e) => (iface: iface, mthd: e)))
+                  .expand((iface) =>
+                      iface.methods.map((e) => (iface: iface, mthd: e)))
                   .map(
                     (im) =>
                         "${im.mthd.name} = ${im.iface.name.camelCase}.${im.mthd.name}",
@@ -231,37 +145,6 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     return output.joinLines;
   }
 }
-
-extension TypeParameterizedElementX on TypeParameterizedElement {
-  String get parametersDart => typeParameters.parametersDart;
-
-  String get argumentsDart => typeParameters.argumentsDart;
-
-  String get nameWithArguments => "$displayName$argumentsDart";
-}
-
-extension ListOfTypeParameterElementX on List<TypeParameterElement> {
-  String get parametersDart => isEmpty
-      ? ""
-      : map((e) {
-          return e.toString().removePrefixes(
-            [
-              "in ",
-              "out ",
-            ],
-          );
-        }).join(",").inChevron;
-
-  String get argumentsDart => isEmpty
-      ? ""
-      : map((e) {
-          return e.name;
-        }).join(",").inChevron;
-}
-
-const prefixOfHas = "Has";
-const suffixOfIndirect = "Indirect";
-const suffixOfEffective = "Effective";
 
 class Mthd {
   final String type;

@@ -37,8 +37,8 @@ abstract class IfaceOnly<T extends Object>
 
 
 abstract class Merge1 implements HasReadValue {}
-abstract class Merge2 implements HasWriteValue {}
+abstract class Merge2<T extends Object> implements HasWriteValue<T> {}
 @Compose()
-abstract class Merge implements Merge1, Merge2, HasWatchValue {}
+abstract class Merge implements Merge1, Merge2, ReadWrite, HasWatchValue {}
 
 
