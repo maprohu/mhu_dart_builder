@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -9,8 +8,8 @@ import 'package:analyzer/src/dart/constant/value.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import 'package:mhu_dart_builder/mhu_dart_builder.dart';
-import 'package:mhu_dart_commons/commons.dart';
+import 'package:mhu_dart_annotation/mhu_dart_annotation.dart';
+import 'package:mhu_dart_sourcegen/mhu_dart_sourcegen.dart';
 import 'package:recase/recase.dart';
 import 'package:source_gen/source_gen.dart';
 

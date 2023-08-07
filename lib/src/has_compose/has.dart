@@ -15,7 +15,6 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
     element as TypeParameterizedElement;
 
     var output = <String>[];
-    void out(String str) => output.add(str);
 
     final name = element.displayName;
     final params = element.parametersDart;
@@ -27,12 +26,12 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
 
       "abstract class $prefixOfHas$name$params".plusCurlyLines([
         "$name$args get $camelName;",
-      ]).also(out);
+      ]).addTo(output);
     }
 
     final defaultValue = element.defaultValue;
     if (defaultValue != null) {
-      "@HasDefault($defaultValue)".also(out);
+      "@HasDefault($defaultValue)".addTo(output);
     }
 
     hasClass(name);
@@ -46,4 +45,9 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
 
     return output.joinLines;
   }
+}
+
+extension _AnyX<T> on T {
+  void addTo(List<T> target) => target.add(this);
+
 }

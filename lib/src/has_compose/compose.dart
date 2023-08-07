@@ -17,7 +17,6 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     }
 
     var output = <String>[];
-    void out(String str) => output.add(str);
 
     final List<Iface> ifaces = element.interfaces.map((e) {
       return Iface(
@@ -117,7 +116,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
             )
             .plusSemi,
       ...merge(),
-    ]).also(out);
+    ]).addTo(output);
 
     final delegateFieldName = "${name}Delegate";
     final mixinName = "Delegated${className}Mixin";
@@ -129,7 +128,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
       ...mthds.map((e) {
         return "@override ${e.type} get ${e.name} => $delegateFieldName.${e.name};";
       }),
-    ]).also(out);
+    ]).addTo(output);
     "base class $delegatedName$params"
         .plus(" extends $className$args ")
         .plus(" with $mixinName$args")
@@ -140,7 +139,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
             "this.$delegateFieldName",
           )
           .plusSemi,
-    ]).also(out);
+    ]).addTo(output);
 
     return output.joinLines;
   }
