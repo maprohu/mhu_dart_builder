@@ -188,7 +188,7 @@ extension InterfaceTypeX on InterfaceType {
 
   Mthd get singleMethod {
     return Mthd(
-      type: getDisplayString(withNullability: false).withoutHas,
+      type: getDisplayString(withNullability: true).withoutHas,
       name: element.name.withoutHas.camelCase,
       nullable: accessors.first.declaration.returnType.nullabilitySuffix ==
           NullabilitySuffix.question,
