@@ -61,6 +61,7 @@ extension ListOfTypeParameterElementX on List<TypeParameterElement> {
             [
               "in ",
               "out ",
+              "inout ",
             ],
           );
         }).join(",").inChevron;
