@@ -70,10 +70,10 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
             .plus(
               multis
                   .expand((iface) =>
-                      iface.methods.map((e) => (iface: iface, mthd: e)))
+                      iface.methodNames.map((e) => (iface: iface, mthd: e)))
                   .map(
                     (im) =>
-                        "${im.mthd.name} = ${im.iface.name.camelCase}.${im.mthd.name}",
+                        "${im.mthd} = ${im.iface.name.camelCase}.${im.mthd}",
                   )
                   .joinEnclosedOrEmpty(":", "", ','),
             )
