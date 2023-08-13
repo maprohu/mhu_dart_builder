@@ -12,20 +12,77 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     ConstantReader annotation,
     buildStep,
   ) {
-    if (element is! ClassElement) {
-      return;
+    if (element is ClassElement) {
+      final List<Iface> ifaces = element.interfaces.map((e) {
+        return Iface(
+          single: e.isSingle,
+          methods: [...e.collectMethods],
+          name: e.nameWithoutHas,
+          type: e.toString(),
+        );
+      }).toList();
+
+      final className = element.displayName;
+      final params = element.parametersDart;
+      final args = element.argumentsDart;
+
+      return generateComposedClasses(
+        className: className,
+        ifaces: ifaces,
+        params: params,
+        args: args,
+      );
     }
 
-    var output = <String>[];
+    if (element is TypeAliasElement) {
+      final className = element.displayName;
+      final params = element.parametersDart;
+      final args = element.argumentsDart;
 
-    final List<Iface> ifaces = element.interfaces.map((e) {
-      return Iface(
-        single: e.isSingle,
-        methods: [...e.collectMethods],
-        name: e.nameWithoutHas,
-        type: e.toString(),
+      final aliasedType = element.aliasedType;
+
+      final hasClassName = "$prefixOfHas$className";
+
+      final fullType = "$className$params";
+
+      final List<Iface> ifaces = [
+        Iface(
+          single: true,
+          methods: [
+            Mthd(
+              type: fullType,
+              name: className.camelCase,
+              defaultValue: element.defaultValue,
+              nullable:
+                  aliasedType.nullabilitySuffix == NullabilitySuffix.question,
+            ),
+          ],
+          name: className,
+          type: fullType,
+        ),
+      ];
+
+      return generateComposedClasses(
+        className: className,
+        baseClassName: hasClassName,
+        ifaces: ifaces,
+        params: params,
+        args: args,
       );
-    }).toList();
+    }
+  }
+
+  String generateComposedClasses({
+    required String className,
+    required List<Iface> ifaces,
+    required String params,
+    required String args,
+    String? baseClassName,
+  }) {
+    final output = <String>[];
+    final name = className.camelCase;
+    final composedClassName = "Composed$className";
+    baseClassName ??= className;
 
     final mthds = ifaces
         .expand((element) => element.methods)
@@ -35,12 +92,6 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
         )
         .values
         .toList();
-
-    final className = element.displayName;
-    final name = className.camelCase;
-    final composedClassName = "Composed$className";
-    final params = element.parametersDart;
-    final args = element.argumentsDart;
 
     Iterable<String> merge() {
       final multis = <Iface>[];
@@ -82,7 +133,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     }
 
     "base class $composedClassName$params"
-        .plus(" extends $className$args")
+        .plus(" extends $baseClassName$args")
         .plusCurlyLines([
       ...mthds.map((e) {
         return "@override final ${e.type} ${e.name};";
@@ -122,18 +173,18 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     final mixinName = "Delegated${className}Mixin";
     final delegatedName = "Delegated$className";
     "base mixin $mixinName$params"
-        .plus(" implements $className$args")
+        .plus(" implements $baseClassName$args")
         .plusCurlyLines([
-      "$className$args get $delegateFieldName;",
+      "$baseClassName$args get $delegateFieldName;",
       ...mthds.map((e) {
         return "@override ${e.type} get ${e.name} => $delegateFieldName.${e.name};";
       }),
     ]).addTo(output);
     "base class $delegatedName$params"
-        .plus(" extends $className$args ")
+        .plus(" extends $baseClassName$args ")
         .plus(" with $mixinName$args")
         .plusCurlyLines([
-      "@override final $className$args $delegateFieldName;",
+      "@override final $baseClassName$args $delegateFieldName;",
       delegatedName
           .plusParen(
             "this.$delegateFieldName",

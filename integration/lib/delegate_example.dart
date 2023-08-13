@@ -11,6 +11,7 @@ typedef ReadValue<T extends Object> = T Function();
 typedef WriteValue<T> = void Function(T value);
 
 @Has()
+@Compose()
 typedef WatchValue<T> = void Function(T value);
 
 void _noop() {}
