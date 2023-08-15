@@ -45,30 +45,3 @@ extension ConstantReaderX on ConstantReader {
   }
 }
 
-extension TypeParameterizedElementX on TypeParameterizedElement {
-  String get parametersDart => typeParameters.parametersDart;
-
-  String get argumentsDart => typeParameters.argumentsDart;
-
-  String get nameWithArguments => "$displayName$argumentsDart";
-}
-
-extension ListOfTypeParameterElementX on List<TypeParameterElement> {
-  String get parametersDart => isEmpty
-      ? ""
-      : map((e) {
-          return e.toString().removePrefixes(
-            [
-              "in ",
-              "out ",
-              "inout ",
-            ],
-          );
-        }).join(",").inChevron;
-
-  String get argumentsDart => isEmpty
-      ? ""
-      : map((e) {
-          return e.name;
-        }).join(",").inChevron;
-}

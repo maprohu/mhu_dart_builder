@@ -12,6 +12,13 @@ builders:
     build_extensions: {".dart": [".g.compose.dart"]}
     auto_apply: none
     build_to: source
+  customizer_builder:
+    import: "package:mhu_dart_builder/src/customizer.dart"
+    builder_factories: ["customizerBuilder"]
+    build_extensions: {".dart": [".customizer.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen:combining_builder"]
 
 targets:
   $default:

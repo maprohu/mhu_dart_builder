@@ -47,7 +47,3 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
   }
 }
 
-extension _AnyX<T> on T {
-  void addTo(List<T> target) => target.add(this);
-
-}
