@@ -62,13 +62,16 @@ class ExampleOutput<A, B> {}
 
 @Cst()
 typedef TestFeature<O> = ExampleOutput<O, K>? Function<K, V>(
-  @Lookup() ExampleKey<ExampleBase, K, V> key,
+  ExampleKey<ExampleBase, K, V> key,
   ExampleInput<K, V> input,
 );
 
-@Cst()
+@Cst(
+  keyParamCount: 2,
+)
 typedef TestFeature2<O> = ExampleOutput<O, K>? Function<K, V>(
-  @Lookup() ExampleKey<ExampleBase, K, V> key1,
-  @Lookup() ExampleKey<ExampleBase, K, V> key2,
-  ExampleInput<K, V> input,
+  ExampleKey<ExampleBase, K, V> key1,
+  ExampleKey<ExampleBase, K, V> key2,
+  ExampleInput<K, V> input1,
+  ExampleInput<K, V> input2,
 );

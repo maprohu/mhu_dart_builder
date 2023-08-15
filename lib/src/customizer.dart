@@ -34,14 +34,12 @@ class CustomizerGenerator extends GeneratorForAnnotation<Cst> {
 
     final outputParams = element.typeParameters;
 
-    final lookupChecker = TypeChecker.fromRuntime(Lookup);
+    // final lookupChecker = TypeChecker.fromRuntime(Lookup);
 
-    var lookupParams =
-        aliasedType.parameters.where(lookupChecker.hasAnnotationOf).toList();
+    final keyParamCount =
+        annotation.objectValue.getField("keyParamCount")!.toIntValue()!;
 
-    if (lookupParams.isEmpty) {
-      lookupParams = [aliasedType.parameters.first];
-    }
+    final lookupParams = aliasedType.parameters.take(keyParamCount).toList();
 
     final inputParams =
         aliasedType.parameters.whereNot(lookupParams.contains).toList();
@@ -53,34 +51,84 @@ class CustomizerGenerator extends GeneratorForAnnotation<Cst> {
         param.name:
             param.bound?.getDisplayString(withNullability: true) ?? "dynamic",
     };
-    final lookupTypeDart = lookupParams
+    final dynamicLookupType = lookupParams
         .map((e) => e.type.substituteTypeArgs(dynamicMap))
         .toList()
         .joinEnclosedIfMultiple();
 
-    final inputTypeDart = inputParams
+    final dynamicInputType = inputParams
         .map((e) => e.type.substituteTypeArgs(dynamicMap))
         .toList()
         .joinEnclosedIfMultiple();
 
-    final outputType =
+    final dynamicOutputType =
+        aliasedType.returnType.substituteTypeArgs(dynamicMap);
+
+    late final functionType = element.name.plus(element.argumentsDart);
+
+    late final outputType =
         aliasedType.returnType.getDisplayString(withNullability: true);
 
-    "class $pascalName"
+    final className = pascalName.plus("Customizer");
+
+    Iterable<String> splitRecord(String name, int count) {
+      if (count == 1) {
+        return [name];
+      } else {
+        return Iterable.generate(
+          count,
+          (index) => "$name.\$${index + 1}",
+        );
+      }
+    }
+
+    "class $className"
         .plus(outputParams.parametersDart)
         .plus(" extends ${nm(GenericFeature)} ")
         .plus([
-          lookupTypeDart,
-          inputTypeDart,
-          outputType,
+          dynamicLookupType,
+          dynamicInputType,
+          dynamicOutputType,
         ].joinInChevronOrEmpty())
         .plusCurlyLines([
-      // pascalName.plusParenLines([
-      //   "$outputType Function".plus(invokeFunctionDef).plus(" defaultFeature,"),
-      // ]).plus(": super(defaultFeature);"),
-      // "$outputType call"
-      //     .plus(invokeFunctionDef)
-      //     .plus("=>\$invoke($keyCamel, $inputCamel);"),
+      className
+          .plusParenLines([
+            functionType.plus(" defaultFeature,"),
+          ])
+          .plus(": super")
+          .plusParenLines([
+            "(key, input) => defaultFeature"
+                .plusParenLines(
+                  [
+                    ...splitRecord("key", lookupParams.length),
+                    ...splitRecord("input", inputParams.length),
+                  ].plusCommas,
+                )
+                .plusComma,
+          ])
+          .plusSemi,
+      "$outputType call".plus(inputTypeParams.parametersDart).plusParenLines([
+        ...aliasedType.parameters
+            .map((e) => e.getDisplayString(withNullability: true))
+            .plusCommas
+      ]).plus(
+        "=>\$invoke"
+            .plusParenLines(
+              [
+                lookupParams
+                    .map((e) => e.name)
+                    .toList()
+                    .joinEnclosedIfMultiple(),
+                inputParams
+                    .map((e) => e.name)
+                    .toList()
+                    .joinEnclosedIfMultiple(),
+              ].plusCommas,
+            )
+            .plus(" as ")
+            .plus(outputType)
+            .plusSemi,
+      ),
       // "void put".plus(typeParamsInChevrons).plusParenLines([
       //   keyParamDef,
       //   "$outputType Function($inputParamDef) \$feature,"
