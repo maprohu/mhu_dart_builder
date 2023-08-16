@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -8,10 +10,25 @@ import 'package:mhu_dart_sourcegen/mhu_dart_sourcegen.dart';
 import 'package:recase/recase.dart';
 import 'package:source_gen/source_gen.dart';
 
-Builder customizerBuilder(BuilderOptions options) =>
-    SharedPartBuilder([CustomizerGenerator()], 'customizer');
+Builder customizerBuilder(BuilderOptions options) => SharedPartBuilder(
+      [CustomizerGenerator()],
+      'customizer',
+    );
 
-class CustomizerGenerator extends GeneratorForAnnotation<Cst> {
+class CustomizerGenerator extends GeneratorForAnnotation<Customizer> {
+  @override
+  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) async {
+    final result = await super.generate(library, buildStep);
+    if (result.isNotEmpty) {
+      return [
+        "// ignore_for_file: unnecessary_cast",
+        result,
+      ].joinLines;
+    } else {
+      return result;
+    }
+  }
+
   @override
   String generateForAnnotatedElement(
     Element element,
@@ -87,7 +104,7 @@ class CustomizerGenerator extends GeneratorForAnnotation<Cst> {
         .plus(" extends ${nm(GenericFeature)} ")
         .plus([
           dynamicLookupType,
-          dynamicInputType,
+          if (inputParams.isNotEmpty) dynamicInputType else "void",
           dynamicOutputType,
         ].joinInChevronOrEmpty())
         .plusCurlyLines([
@@ -119,16 +136,63 @@ class CustomizerGenerator extends GeneratorForAnnotation<Cst> {
                     .map((e) => e.name)
                     .toList()
                     .joinEnclosedIfMultiple(),
-                inputParams
-                    .map((e) => e.name)
-                    .toList()
-                    .joinEnclosedIfMultiple(),
+                if (inputParams.isNotEmpty)
+                  inputParams
+                      .map((e) => e.name)
+                      .toList()
+                      .joinEnclosedIfMultiple()
+                else
+                  "null",
               ].plusCommas,
             )
             .plus(" as ")
             .plus(outputType)
             .plusSemi,
       ),
+      "void put"
+          .plus(inputTypeParams.parametersDart)
+          .plusParenLines(
+            [
+              ...lookupParams.map(
+                (e) => e.getDisplayString(withNullability: true),
+              ),
+              "$outputType Function"
+                  .plusParenLines(
+                    [
+                      ...inputParams.map(
+                        (e) => e.getDisplayString(withNullability: true),
+                      ),
+                    ].plusCommas,
+                  )
+                  .plus(" \$feature"),
+            ].plusCommas,
+          )
+          .plus(
+            "=> \$put"
+                .plusParenLines(
+                  [
+                    lookupParams
+                        .map((e) => e.name)
+                        .toList()
+                        .joinEnclosedIfMultiple(),
+                    "(input) => \$feature".plusParenLines([
+                      ...inputParams.mapIndexed((index, element) {
+                        return "input"
+                            .plus(
+                              inputParams.length == 1 ? "" : ".\$${index + 1}",
+                            )
+                            .plus(" as ")
+                            .plus(
+                              element.type.getDisplayString(
+                                withNullability: true,
+                              ),
+                            );
+                      }).plusCommas,
+                    ]),
+                  ].plusCommas,
+                )
+                .plusSemi,
+          ),
       // "void put".plus(typeParamsInChevrons).plusParenLines([
       //   keyParamDef,
       //   "$outputType Function($inputParamDef) \$feature,"
