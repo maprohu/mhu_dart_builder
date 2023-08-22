@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
 import 'package:mhu_dart_annotation/mhu_dart_annotation.dart';
+import 'package:mhu_dart_builder/src/has_compose/has_compose.dart';
 import 'package:mhu_dart_sourcegen/mhu_dart_sourcegen.dart';
 import 'package:source_gen/source_gen.dart';
 
@@ -25,7 +27,7 @@ class ExtGenerator extends Generator {
         for (final parameter in element.parameters) {
           final ext = typeChecker.firstAnnotationOf(parameter);
           if (ext != null) {
-            yield* generateExtMethod(element, parameter);
+            yield* generateExtMethod(element, parameter, ext);
           }
         }
       }
@@ -35,6 +37,7 @@ class ExtGenerator extends Generator {
   Iterable<String> generateExtMethod(
     FunctionElement function,
     ParameterElement parameter,
+    DartObject annotation,
   ) sync* {
     final parameterType = parameter.type;
     final parameterGenericNames =
@@ -89,13 +92,13 @@ class ExtGenerator extends Generator {
       }
     }
 
-    Iterable<String> argList() sync* {
+    Iterable<String> argList({bool has = false}) sync* {
       for (final param in function.parameters) {
         if (param.isNamed) {
           yield param.name;
           yield ":";
         }
-        if (param == parameter) {
+        if (!has && param == parameter) {
           yield "this";
         } else {
           yield param.name;
@@ -127,5 +130,40 @@ class ExtGenerator extends Generator {
       ...argList().enclosedInParen,
       ";",
     ].joinInCurlyOrEmpty();
+
+    if (annotation.getField("has")!.toBoolValue()!) {
+      final type = parameterType as ParameterizedType;
+      final alias = type.alias;
+      final typeElement = alias == null ? type.element! : alias.element;
+
+      yield r"extension ";
+      yield r'$';
+      yield function.name;
+      yield r'$';
+      yield parameter.name;
+      yield r'$';
+      yield nm(Ext);
+      yield r'$';
+      yield nm(Has);
+      yield extensionGenerics.parametersDart;
+      yield r" on ";
+      yield prefixOfHas;
+      yield typeElement.displayName;
+      yield type.typeArguments
+          .map((e) => e.getDisplayString(withNullability: true))
+          .joinInChevronOrEmpty();
+      yield [
+        function.returnType.getDisplayString(withNullability: true),
+        " ",
+        function.displayName,
+        methodGenerics.parametersDart,
+        ...paramList().enclosedInParen,
+        "=>",
+        r'$lib.',
+        function.displayName,
+        ...argList(has: true).enclosedInParen,
+        ";",
+      ].joinInCurlyOrEmpty();
+    }
   }
 }

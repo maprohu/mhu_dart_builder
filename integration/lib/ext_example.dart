@@ -4,6 +4,12 @@ import 'ext_example.dart' as $lib;
 
 part 'ext_example.g.dart';
 
+part 'ext_example.g.has.dart';
+
+
+@Has()
+typedef SomeInt = int;
+
 class SomeClass<A> {}
 
 void someMethod<A, B>(
@@ -11,7 +17,7 @@ void someMethod<A, B>(
   SomeClass<SomeClass<A>> Function(
     SomeClass<B> input,
   ) someClass, {
-  required int someInt,
+  @Ext(has: true) required SomeInt someInt,
   int someOtherInt = 5,
 }) {}
 

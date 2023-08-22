@@ -18,6 +18,7 @@ part 'has.dart';
 part 'compose.dart';
 
 const prefixOfHas = "Has";
+const prefixOfMix = "Mix";
 // const suffixOfIndirect = "Indirect";
 
 final checkerHasDefault = TypeChecker.fromRuntime(HasDefault);

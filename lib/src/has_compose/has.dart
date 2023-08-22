@@ -1,17 +1,17 @@
 part of 'has_compose.dart';
 
 Builder delegateHasClassBuilder(BuilderOptions options) => PartBuilder(
-  [DelegateHasClassGenerator()],
-  '.g.has.dart',
-);
+      [DelegateHasClassGenerator()],
+      '.g.has.dart',
+    );
 
 class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
   @override
   generateForAnnotatedElement(
-      Element element,
-      ConstantReader annotation,
-      buildStep,
-      ) {
+    Element element,
+    ConstantReader annotation,
+    buildStep,
+  ) {
     element as TypeParameterizedElement;
 
     var output = <String>[];
@@ -26,6 +26,20 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
 
       "abstract class $prefixOfHas$name$params".plusCurlyLines([
         "$name$args get $camelName;",
+      ]).addTo(output);
+      "mixin $prefixOfMix$name$params"
+          .plus(" implements $prefixOfHas$name$args")
+          .plusCurlyLines([
+        "@override late final $name$args $camelName;",
+      ]).addTo(output);
+      "extension $prefixOfHas$name\$Ext$params"
+          .plus(" on $name$args")
+          .plusCurlyLines([
+        "void init$prefixOfMix$name"
+            .plusParen("$prefixOfMix$name$args mix")
+            .plusCurlyLines([
+          "mix.$camelName = this;",
+        ]),
       ]).addTo(output);
     }
 
@@ -46,4 +60,3 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
     return output.joinLines;
   }
 }
-
