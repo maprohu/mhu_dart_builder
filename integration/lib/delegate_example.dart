@@ -1,8 +1,10 @@
 import 'package:mhu_dart_annotation/mhu_dart_annotation.dart';
 
+import 'delegate_example.dart' as $lib;
 part 'delegate_example.g.has.dart';
+part 'delegate_example.g.dart';
 
-part 'delegate_example.g.compose.dart';
+
 
 @Has()
 typedef ReadValue<T extends Object> = T Function();

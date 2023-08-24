@@ -1,8 +1,8 @@
 part of 'has_compose.dart';
 
-Builder delegateComposeBuilder(BuilderOptions options) => PartBuilder(
+Builder delegateComposeBuilder(BuilderOptions options) => SharedPartBuilder(
       [DelegateComposeGenerator()],
-      '.g.compose.dart',
+      'compose',
     );
 
 class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {

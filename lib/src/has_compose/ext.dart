@@ -7,7 +7,9 @@ import 'package:build/build.dart';
 import 'package:collection/collection.dart';
 import 'package:mhu_dart_annotation/mhu_dart_annotation.dart';
 import 'package:mhu_dart_builder/src/has_compose/has_compose.dart';
+import 'package:mhu_dart_builder/src/parameter_element.dart';
 import 'package:mhu_dart_sourcegen/mhu_dart_sourcegen.dart';
+import 'package:recase/recase.dart';
 import 'package:source_gen/source_gen.dart';
 
 Builder extBuilder(BuilderOptions options) =>
@@ -65,24 +67,23 @@ class ExtGenerator extends Generator {
 
     Iterable<String> paramListOf(Iterable<ParameterElement> params) sync* {
       for (final param in params) {
-        yield param.getDisplayString(withNullability: true);
-        yield ",";
+        yield* param.declareDartParts;
       }
     }
 
-    Iterable<String> specialParamListOf(
-        Iterable<ParameterElement> params) sync* {
-      for (final param in params) {
-        yield param.getDisplayString(withNullability: true).unenclosed;
-        yield ",";
-      }
-    }
+    // Iterable<String> specialParamListOf(
+    //     Iterable<ParameterElement> params) sync* {
+    //   for (final param in params) {
+    //     yield param.getDisplayString(withNullability: true).unenclosed;
+    //     yield ",";
+    //   }
+    // }
 
     Iterable<String> paramList() sync* {
       yield* paramListOf(plainParams);
       final firstSpecialParam = specialParams.firstOrNull;
       if (firstSpecialParam != null) {
-        final specials = specialParamListOf(specialParams);
+        final specials = paramListOf(specialParams);
 
         if (firstSpecialParam.isNamed) {
           yield* specials.enclosedInCurly;
@@ -92,14 +93,14 @@ class ExtGenerator extends Generator {
       }
     }
 
-    Iterable<String> argList({bool has = false}) sync* {
+    Iterable<String> argList({String thisName = "this"}) sync* {
       for (final param in function.parameters) {
         if (param.isNamed) {
           yield param.name;
           yield ":";
         }
-        if (!has && param == parameter) {
-          yield "this";
+        if (param == parameter) {
+          yield thisName;
         } else {
           yield param.name;
         }
@@ -131,10 +132,14 @@ class ExtGenerator extends Generator {
       ";",
     ].joinInCurlyOrEmpty();
 
+    Element aliasOrTypeElement(DartType type) {
+      final alias = type.alias;
+      return alias == null ? type.element! : alias.element;
+    }
+
     if (annotation.getField("has")!.toBoolValue()!) {
       final type = parameterType as ParameterizedType;
-      final alias = type.alias;
-      final typeElement = alias == null ? type.element! : alias.element;
+      final typeElement = aliasOrTypeElement(type);
 
       yield r"extension ";
       yield r'$';
@@ -161,7 +166,9 @@ class ExtGenerator extends Generator {
         "=>",
         r'$lib.',
         function.displayName,
-        ...argList(has: true).enclosedInParen,
+        ...argList(
+          thisName: typeElement.displayName.camelCase,
+        ).enclosedInParen,
         ";",
       ].joinInCurlyOrEmpty();
     }

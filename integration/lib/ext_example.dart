@@ -6,11 +6,12 @@ part 'ext_example.g.dart';
 
 part 'ext_example.g.has.dart';
 
-
 @Has()
 typedef SomeInt = int;
 
 class SomeClass<A> {}
+
+typedef SomeFunction = void Function();
 
 void someMethod<A, B>(
   @Ext()
@@ -25,6 +26,7 @@ void otherMethod<A, B>(
   @Ext()
   SomeClass<SomeClass<A>> Function(
     SomeClass<B> input,
-  ) someClass, [
+  ) someClass,
+  SomeFunction someFunction, [
   int someOtherInt = 5,
 ]) {}

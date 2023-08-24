@@ -1,31 +1,32 @@
 builders:
   delegate_has_class_builder:
     import: "package:mhu_dart_builder/src/has_compose/has_compose.dart"
-    builder_factories: ["delegateHasClassBuilder"]
-    build_extensions: {".dart": [".g.has.dart"]}
+    builder_factories: [ "delegateHasClassBuilder" ]
+    build_extensions: { ".dart": [ ".g.has.dart" ] }
     auto_apply: dependents
     build_to: source
-    applies_builders: [":delegate_compose_builder"]
+    runs_before: [ ":delegate_compose_builder",":ext_builder" ]
   delegate_compose_builder:
     import: "package:mhu_dart_builder/src/has_compose/has_compose.dart"
-    builder_factories: ["delegateComposeBuilder"]
-    build_extensions: {".dart": [".g.compose.dart"]}
-    auto_apply: none
-    build_to: source
+    builder_factories: [ "delegateComposeBuilder" ]
+    build_extensions: { ".dart": [ ".compose.g.part" ] }
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: [ "source_gen:combining_builder" ]
   ext_builder:
     import: "package:mhu_dart_builder/src/has_compose/ext.dart"
-    builder_factories: ["extBuilder"]
-    build_extensions: {".dart": [".ext.g.part"]}
+    builder_factories: [ "extBuilder" ]
+    build_extensions: { ".dart": [ ".ext.g.part" ] }
     auto_apply: dependents
     build_to: cache
-    applies_builders: ["source_gen:combining_builder"]
+    applies_builders: [ "source_gen:combining_builder" ]
   customizer_builder:
     import: "package:mhu_dart_builder/src/customizer.dart"
-    builder_factories: ["customizerBuilder"]
-    build_extensions: {".dart": [".customizer.g.part"]}
+    builder_factories: [ "customizerBuilder" ]
+    build_extensions: { ".dart": [ ".customizer.g.part" ] }
     auto_apply: dependents
     build_to: cache
-    applies_builders: ["source_gen:combining_builder"]
+    applies_builders: [ "source_gen:combining_builder" ]
 
 targets:
   $default:
