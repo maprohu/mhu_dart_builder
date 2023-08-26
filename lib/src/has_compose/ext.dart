@@ -109,28 +109,42 @@ class ExtGenerator extends Generator {
       }
     }
 
-    yield r"extension ";
-    yield r'$';
-    yield function.name;
-    yield r'$';
-    yield parameter.name;
-    yield r'$';
-    yield nm(Ext);
-    yield extensionGenerics.parametersDart;
-    yield r" on ";
-    yield parameterType.getDisplayString(withNullability: true);
-    yield [
-      function.returnType.getDisplayString(withNullability: true),
-      " ",
-      function.displayName,
-      methodGenerics.parametersDart,
-      ...paramList().enclosedInParen,
-      "=>",
-      r'$lib.',
-      function.displayName,
-      ...argList().enclosedInParen,
-      ";",
-    ].joinInCurlyOrEmpty();
+    Strings createExtension({
+      required String onType,
+      Strings nameSuffix = const [],
+      String thisName = "this",
+    }) sync* {
+      yield r"extension ";
+      yield r'$';
+      yield function.name;
+      yield r'$';
+      yield parameter.name;
+      yield r'$';
+      yield nm(Ext);
+      yield* nameSuffix;
+      yield extensionGenerics.parametersDart;
+      yield r" on ";
+      yield onType;
+      yield [
+        function.returnType.getDisplayString(withNullability: true),
+        " ",
+        function.displayName,
+        methodGenerics.parametersDart,
+        ...paramList().enclosedInParen,
+        "=>",
+        r'$lib.',
+        function.displayName,
+        function.typeParameters.argumentsDart,
+        ...argList(
+          thisName: thisName,
+        ).enclosedInParen,
+        ";",
+      ].joinInCurlyOrEmpty();
+    }
+
+    yield* createExtension(
+      onType: parameterType.getDisplayString(withNullability: true),
+    );
 
     Element aliasOrTypeElement(DartType type) {
       final alias = type.alias;
@@ -141,36 +155,52 @@ class ExtGenerator extends Generator {
       final type = parameterType as ParameterizedType;
       final typeElement = aliasOrTypeElement(type);
 
-      yield r"extension ";
-      yield r'$';
-      yield function.name;
-      yield r'$';
-      yield parameter.name;
-      yield r'$';
-      yield nm(Ext);
-      yield r'$';
-      yield nm(Has);
-      yield extensionGenerics.parametersDart;
-      yield r" on ";
-      yield prefixOfHas;
-      yield typeElement.displayName;
-      yield type.typeArguments
-          .map((e) => e.getDisplayString(withNullability: true))
-          .joinInChevronOrEmpty();
-      yield [
-        function.returnType.getDisplayString(withNullability: true),
-        " ",
-        function.displayName,
-        methodGenerics.parametersDart,
-        ...paramList().enclosedInParen,
-        "=>",
-        r'$lib.',
-        function.displayName,
-        ...argList(
-          thisName: typeElement.displayName.camelCase,
-        ).enclosedInParen,
-        ";",
-      ].joinInCurlyOrEmpty();
+      yield* createExtension(
+        nameSuffix: [
+          r'$',
+          nm(Has),
+        ],
+        onType: [
+          prefixOfHas,
+          typeElement.displayName,
+          type.typeArguments
+              .map((e) => e.getDisplayString(withNullability: true))
+              .joinInChevronOrEmpty(),
+        ].join(),
+        thisName: typeElement.displayName.camelCase,
+      );
+
+      // yield r"extension ";
+      // yield r'$';
+      // yield function.name;
+      // yield r'$';
+      // yield parameter.name;
+      // yield r'$';
+      // yield nm(Ext);
+      // yield r'$';
+      // yield nm(Has);
+      // yield extensionGenerics.parametersDart;
+      // yield r" on ";
+      // yield prefixOfHas;
+      // yield typeElement.displayName;
+      // yield type.typeArguments
+      //     .map((e) => e.getDisplayString(withNullability: true))
+      //     .joinInChevronOrEmpty();
+      // yield [
+      //   function.returnType.getDisplayString(withNullability: true),
+      //   " ",
+      //   function.displayName,
+      //   methodGenerics.parametersDart,
+      //   ...paramList().enclosedInParen,
+      //   "=>",
+      //   r'$lib.',
+      //   function.displayName,
+      //   methodGenerics.argumentsDart,
+      //   ...argList(
+      //     thisName: typeElement.displayName.camelCase,
+      //   ).enclosedInParen,
+      //   ";",
+      // ].joinInCurlyOrEmpty();
     }
   }
 }

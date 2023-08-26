@@ -19,7 +19,8 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
     final name = element.displayName;
     final params = element.parametersDart;
     final args = element.argumentsDart;
-    // final indirectName = "$name$suffixOfIndirect";
+
+    final indirectName = "Call$name";
 
     void hasClass(String name) {
       final camelName = name.camelCase;
@@ -49,8 +50,8 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
     }
 
     hasClass(name);
-    // "typedef $indirectName$params = $name$args Function();".also(out);
-    // hasClass(indirectName);
+    "typedef $indirectName$params = $name$args Function();".addTo(output);
+    hasClass(indirectName);
     //
     // "extension $prefixOfHas$indirectName\$Ext$params on $prefixOfHas$indirectName$args"
     //     .plusCurlyLines([

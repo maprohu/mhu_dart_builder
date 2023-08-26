@@ -29,4 +29,12 @@ void otherMethod<A, B>(
   ) someClass,
   SomeFunction someFunction, [
   int someOtherInt = 5,
+  Function(Function(int x))? x,
+]) {}
+
+void thirdMethod<A, B>(
+  @Ext() SomeClass<SomeClass<A>> Function() someClass,
+  SomeFunction someFunction, [
+  int someOtherInt = 5,
+  Function(Function(int x))? x,
 ]) {}
