@@ -38,3 +38,11 @@ void thirdMethod<A, B>(
   int someOtherInt = 5,
   Function(Function(int x))? x,
 ]) {}
+
+
+void mappingMethod({
+  @ext required int a,
+  @ext required int b,
+}) {
+
+}

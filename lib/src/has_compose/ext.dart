@@ -65,23 +65,17 @@ class ExtGenerator extends Generator {
     final plainParams = methodParams.sublist(0, plainParamCount);
     final specialParams = methodParams.sublist(plainParamCount);
 
+    final firstSpecialParam = specialParams.firstOrNull;
+
     Iterable<String> paramListOf(Iterable<ParameterElement> params) sync* {
       for (final param in params) {
         yield* param.declareDartParts;
       }
     }
 
-    // Iterable<String> specialParamListOf(
-    //     Iterable<ParameterElement> params) sync* {
-    //   for (final param in params) {
-    //     yield param.getDisplayString(withNullability: true).unenclosed;
-    //     yield ",";
-    //   }
-    // }
 
     Iterable<String> paramList() sync* {
       yield* paramListOf(plainParams);
-      final firstSpecialParam = specialParams.firstOrNull;
       if (firstSpecialParam != null) {
         final specials = paramListOf(specialParams);
 
@@ -125,20 +119,53 @@ class ExtGenerator extends Generator {
       yield extensionGenerics.parametersDart;
       yield r" on ";
       yield onType;
-      yield [
-        function.returnType.getDisplayString(withNullability: true),
-        " ",
-        function.displayName,
-        methodGenerics.parametersDart,
-        ...paramList().enclosedInParen,
-        "=>",
-        r'$lib.',
-        function.displayName,
-        function.typeParameters.argumentsDart,
-        ...argList(
+
+      Strings method({
+        String nameSuffix = '',
+        required Strings paramList,
+      }) sync* {
+        yield function.returnType.getDisplayString(withNullability: true);
+        yield " ";
+        yield function.displayName;
+        yield nameSuffix;
+        yield methodGenerics.parametersDart;
+        yield* paramList.enclosedInParen;
+        yield "=>";
+        yield r'$lib.';
+        yield function.displayName;
+        yield function.typeParameters.argumentsDart;
+        yield* argList(
           thisName: thisName,
-        ).enclosedInParen,
-        ";",
+        ).enclosedInParen;
+        yield ";";
+      }
+
+      Strings singleUnnamedMethod() sync* {
+        if (methodParams.length != 1) {
+          return;
+        }
+        if (firstSpecialParam == null) {
+          return;
+        }
+        if (!firstSpecialParam.isNamed) {
+          return;
+        }
+
+        final paramList = firstSpecialParam.declareDartPartsUnnamed;
+
+        yield* method(
+          nameSuffix: r'$',
+          paramList: firstSpecialParam.isRequired
+              ? paramList
+              : paramList.enclosedInBracket,
+        );
+      }
+
+      yield [
+        ...method(
+          paramList: paramList(),
+        ),
+        ...singleUnnamedMethod(),
       ].joinInCurlyOrEmpty();
     }
 
@@ -169,38 +196,6 @@ class ExtGenerator extends Generator {
         ].join(),
         thisName: typeElement.displayName.camelCase,
       );
-
-      // yield r"extension ";
-      // yield r'$';
-      // yield function.name;
-      // yield r'$';
-      // yield parameter.name;
-      // yield r'$';
-      // yield nm(Ext);
-      // yield r'$';
-      // yield nm(Has);
-      // yield extensionGenerics.parametersDart;
-      // yield r" on ";
-      // yield prefixOfHas;
-      // yield typeElement.displayName;
-      // yield type.typeArguments
-      //     .map((e) => e.getDisplayString(withNullability: true))
-      //     .joinInChevronOrEmpty();
-      // yield [
-      //   function.returnType.getDisplayString(withNullability: true),
-      //   " ",
-      //   function.displayName,
-      //   methodGenerics.parametersDart,
-      //   ...paramList().enclosedInParen,
-      //   "=>",
-      //   r'$lib.',
-      //   function.displayName,
-      //   methodGenerics.argumentsDart,
-      //   ...argList(
-      //     thisName: typeElement.displayName.camelCase,
-      //   ).enclosedInParen,
-      //   ";",
-      // ].joinInCurlyOrEmpty();
     }
   }
 }
