@@ -29,8 +29,8 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
       return generateComposedClasses(
         className: className,
         ifaces: ifaces,
-        params: params,
-        args: args,
+        typParams: params,
+        typeArgs: args,
       );
     }
 
@@ -66,8 +66,8 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
         className: className,
         baseClassName: hasClassName,
         ifaces: ifaces,
-        params: params,
-        args: args,
+        typParams: params,
+        typeArgs: args,
       );
     }
   }
@@ -75,14 +75,14 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
   String generateComposedClasses({
     required String className,
     required List<Iface> ifaces,
-    required String params,
-    required String args,
+    required String typParams,
+    required String typeArgs,
     String? baseClassName,
   }) {
     final output = <String>[];
-    final name = className.camelCase;
+    final classCamelName = className.camelCase;
     final composedClassName = "Composed$className";
-    baseClassName ??= className;
+    final effectiveBaseClassName = baseClassName ?? className;
 
     final mthds = ifaces
         .expand((element) => element.methods)
@@ -93,98 +93,179 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
         .values
         .toList();
 
-    Iterable<String> merge() {
+    Iterable<String> merge() sync* {
       final multis = <Iface>[];
       final multiNames = <String>{};
+
+      final multiMap = <String, Iface>{};
 
       for (final iface in ifaces) {
         if (iface.single) break;
         if (multiNames.intersectsWith(iface.methodNames)) break;
         multis.add(iface);
         multiNames.addAll(iface.methodNames);
+        for (final methodName in iface.methodNames) {
+          multiMap[methodName] = iface;
+        }
       }
       if (multis.length <= 1) {
-        return const [];
+        return;
       }
 
-      return [
-        composedClassName.plusDot
-            .plus(r"merge$")
-            .plusParen([
-              ...multis.map(
-                (iface) => "required ${iface.type} ${iface.name.camelCase},",
-              ),
-              ...mthds
-                  .whereNot((m) => multiNames.contains(m.name))
-                  .map((mthd) => mthd.thisParam),
-            ].joinLinesInCurlyOrEmpty)
-            .plus(
-              multis
-                  .expand((iface) =>
-                      iface.methodNames.map((e) => (iface: iface, mthd: e)))
-                  .map(
-                    (im) =>
-                        "${im.mthd} = ${im.iface.name.camelCase}.${im.mthd}",
-                  )
-                  .joinEnclosedOrEmpty(":", "", ','),
-            )
-            .plusSemi,
-      ];
+      yield "factory";
+      yield composedClassName;
+      yield '.';
+      yield r'merge$';
+
+      yield* run(() sync* {
+        for (final iface in multis) {
+          yield "required";
+          yield iface.type;
+          yield iface.name.camelCase;
+          yield ',';
+        }
+
+        for (final mthd in mthds) {
+          if (!multiNames.contains(mthd.name)) {
+            yield mthd.namedParam;
+          }
+        }
+      }).enclosedInCurlyOrEmpty.enclosedInParen;
+
+      yield "=>";
+      yield composedClassName;
+
+      yield* run(() sync* {
+        for (final mthd in mthds) {
+          yield mthd.name;
+          yield ":";
+
+          final iface = multiMap[mthd.name];
+          if (iface != null) {
+            yield iface.name.camelCase;
+            yield '.';
+          }
+          yield mthd.name;
+          yield ',';
+        }
+      }).enclosedInParen;
+      yield ';';
     }
 
-    "base class $composedClassName$params"
-        .plus(" extends $baseClassName$args")
-        .plusCurlyLines([
-      ...mthds.map((e) {
-        return "@override final ${e.type} ${e.name};";
-      }),
-      composedClassName
-          .plusParen(
-            mthds
-                .map(
-                  (e) => e.thisParam,
-                )
-                .joinInCurlyOrEmpty(""),
-          )
-          .plusSemi,
-      for (final iface in ifaces.whereNot((e) => e.single))
-        composedClassName.plusDot
-            .plus(iface.name.camelCase)
-            .plusParen([
-              "required ${iface.type} ${iface.name.camelCase},",
-              ...mthds
-                  .whereNot((m) => iface.methodNames.contains(m.name))
-                  .map((mthd) => mthd.thisParam),
-            ].joinLinesInCurlyOrEmpty)
-            .plus(
-              mthds
-                  .where((m) => iface.methodNames.contains(m.name))
-                  .map(
-                    (mthd) =>
-                        "${mthd.name} = ${iface.name.camelCase}.${mthd.name}",
-                  )
-                  .joinEnclosedOrEmpty(":", "", ','),
-            )
-            .plusSemi,
-      ...merge(),
-    ]).addTo(output);
+    Strings composedContent() sync* {
+      // yield "factory";
+      for (final mthd in mthds) {
+        yield "@override";
+        yield "final";
+        yield mthd.type;
+        yield mthd.name;
+        yield ';';
+      }
 
-    final delegateFieldName = "${name}Delegate";
+      yield composedClassName;
+      yield* [
+        for (final mthd in mthds) mthd.thisParam,
+      ].enclosedInCurlyOrEmpty.enclosedInParen;
+      // yield " = _$composedClassName";
+      yield ';';
+      for (final iface in ifaces.whereNot((e) => e.single)) {
+        yield "factory";
+        yield composedClassName;
+        yield '.';
+        yield iface.name.camelCase;
+
+        yield* run(() sync* {
+          yield "required";
+          yield iface.type;
+          yield iface.name.camelCase;
+          yield ',';
+
+          for (final mthd in mthds) {
+            if (!iface.methodNames.contains(mthd.name)) {
+              yield mthd.namedParam;
+            }
+          }
+        }).enclosedInCurlyOrEmpty.enclosedInParen;
+
+        yield "=>";
+        yield composedClassName;
+
+        yield* run(() sync* {
+          for (final mthd in mthds) {
+            yield mthd.name;
+            yield ":";
+            if (iface.methodNames.contains(mthd.name)) {
+              yield iface.name.camelCase;
+              yield '.';
+            }
+            yield mthd.name;
+            yield ',';
+          }
+        }).enclosedInParen;
+        yield ';';
+      }
+
+      yield* merge();
+    }
+
+    Strings composed() sync* {
+      // yield "@freezedStruct";
+      yield "base class $composedClassName$typParams";
+      // yield "with _\$$composedClassName$typeArgs";
+      yield "implements $effectiveBaseClassName$typeArgs";
+
+      yield* composedContent().enclosedInCurly;
+
+      yield "extension";
+      yield '$effectiveBaseClassName\$CopyExt\$';
+      yield typParams;
+      yield "on";
+      yield effectiveBaseClassName;
+      yield typeArgs;
+
+      yield* run(() sync* {
+        for (final mthd in mthds) {
+          yield effectiveBaseClassName;
+          yield typeArgs;
+          yield "${effectiveBaseClassName.camelCase}With${mthd.name.pascalCase}";
+
+          yield* run(() sync* {
+            yield mthd.type;
+            yield mthd.name;
+          }).enclosedInParen;
+          yield "=>";
+          yield composedClassName;
+          yield* run(() sync* {
+            for (final mthd in mthds) {
+              yield mthd.name;
+              yield ':';
+              yield mthd.name;
+              yield ',';
+            }
+          }).enclosedInParen;
+          yield ';';
+        }
+      }).enclosedInCurly;
+    }
+
+    composed().joinLines.addTo(output);
+
+    final delegateFieldName = "${classCamelName}Delegate";
     final mixinName = "Delegated${className}Mixin";
     final delegatedName = "Delegated$className";
-    "base mixin $mixinName$params"
-        .plus(" implements $baseClassName$args")
+    "base mixin $mixinName$typParams"
+        .plus(" implements $effectiveBaseClassName$typeArgs")
         .plusCurlyLines([
-      "$baseClassName$args get $delegateFieldName;",
+      "$effectiveBaseClassName$typeArgs get $delegateFieldName;",
       ...mthds.map((e) {
         return "@override ${e.type} get ${e.name} => $delegateFieldName.${e.name};";
       }),
     ]).addTo(output);
-    "base class $delegatedName$params"
-        .plus(" extends $baseClassName$args ")
-        .plus(" with $mixinName$args")
+    "base class $delegatedName$typParams"
+        .plus(" extends $effectiveBaseClassName$typeArgs ")
+        .plus(" with $mixinName$typeArgs")
         .plusCurlyLines([
-      "@override final $baseClassName$args $delegateFieldName;",
+      "@override final $effectiveBaseClassName$typeArgs $delegateFieldName;",
       delegatedName
           .plusParen(
             "this.$delegateFieldName",
@@ -213,6 +294,15 @@ class Mthd {
       nullable || defaultValue != null ? "" : "required ";
 
   String get defaultSuffix => defaultValue == null ? "" : " = $defaultValue";
+
+  String get freezedDefault =>
+      defaultValue == null ? "" : "@Default($defaultValue) ";
+
+  String get freezedParam =>
+      freezedDefault.plus(requiredPrefix).plus("$type $name").plusComma;
+
+  String get namedParam =>
+      requiredPrefix.plus("$type $name").plus(defaultSuffix).plusComma;
 
   String get thisParam =>
       requiredPrefix.plus("this.$name").plus(defaultSuffix).plusComma;

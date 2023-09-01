@@ -6,6 +6,8 @@ environment:
 
 
 dependency_overrides:
+  mhu_dart_commons:
+    path: ../../mhu_dart_commons
   mhu_dart_annotation:
     path: ../../mhu_dart_annotation
   mhu_dart_sourcegen:
@@ -21,6 +23,7 @@ dev_dependencies:
   lints: ^2.0.0
   test: ^1.21.0
   build_runner: ^2.4.6
+  freezed: ^2.4.1
   mhu_dart_builder:
     path: ..
 
