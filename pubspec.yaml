@@ -22,7 +22,6 @@ dependencies:
   build: ^2.4.1
   recase: ^4.1.0
   source_gen: ^1.4.0
-  freezed: ^2.4.1
 
 dev_dependencies:
   lints: ^2.0.0

@@ -13,7 +13,6 @@ builders:
     auto_apply: dependents
     build_to: cache
     applies_builders: [ "source_gen:combining_builder" ]
-    runs_before: [ "freezed:freezed" ]
   ext_builder:
     import: "package:mhu_dart_builder/src/has_compose/ext.dart"
     builder_factories: [ "extBuilder" ]
