@@ -7,11 +7,17 @@ Builder delegateComposeBuilder(BuilderOptions options) => SharedPartBuilder(
 
 class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
   @override
-  generateForAnnotatedElement(
+  String generateForAnnotatedElement(
+      Element element,
+      ConstantReader annotation,
+      buildStep,
+      ) {
+    return generateStrings(element).joinLines;
+  }
+  Strings generateStrings(
     Element element,
-    ConstantReader annotation,
-    buildStep,
-  ) {
+  ) sync* {
+
     if (element is ClassElement) {
       final List<Iface> ifaces = element.interfaces.map((e) {
         return Iface(
@@ -26,7 +32,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
       final params = element.parametersDart;
       final args = element.argumentsDart;
 
-      return generateComposedClasses(
+      yield* generateComposedClasses(
         className: className,
         ifaces: ifaces,
         typParams: params,
@@ -62,7 +68,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
         ),
       ];
 
-      return generateComposedClasses(
+      yield* generateComposedClasses(
         className: className,
         baseClassName: hasClassName,
         ifaces: ifaces,
@@ -72,17 +78,17 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
     }
   }
 
-  String generateComposedClasses({
+  Strings generateComposedClasses({
     required String className,
     required List<Iface> ifaces,
     required String typParams,
     required String typeArgs,
     String? baseClassName,
-  }) {
-    final output = <String>[];
+  }) sync* {
     final classCamelName = className.camelCase;
     final composedClassName = "Composed$className";
     final effectiveBaseClassName = baseClassName ?? className;
+
 
     final mthds = ifaces
         .expand((element) => element.methods)
@@ -212,7 +218,7 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
       // yield "@freezedStruct";
       yield "base class $composedClassName$typParams";
       // yield "with _\$$composedClassName$typeArgs";
-      yield "implements $effectiveBaseClassName$typeArgs";
+      yield "extends $effectiveBaseClassName$typeArgs";
 
       yield* composedContent().enclosedInCurly;
 
@@ -236,10 +242,14 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
           yield "=>";
           yield composedClassName;
           yield* run(() sync* {
-            for (final mthd in mthds) {
-              yield mthd.name;
+            for (final innerAttr in mthds) {
+              yield innerAttr.name;
               yield ':';
-              yield mthd.name;
+              if (innerAttr.name != mthd.name) {
+                yield "// ignore: unnecessary_this";
+                yield 'this.';
+              }
+              yield innerAttr.name;
               yield ',';
             }
           }).enclosedInParen;
@@ -248,20 +258,20 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
       }).enclosedInCurly;
     }
 
-    composed().joinLines.addTo(output);
+    yield* composed();
 
     final delegateFieldName = "${classCamelName}Delegate";
     final mixinName = "Delegated${className}Mixin";
     final delegatedName = "Delegated$className";
-    "base mixin $mixinName$typParams"
+    yield "base mixin $mixinName$typParams"
         .plus(" implements $effectiveBaseClassName$typeArgs")
         .plusCurlyLines([
       "$effectiveBaseClassName$typeArgs get $delegateFieldName;",
       ...mthds.map((e) {
         return "@override ${e.type} get ${e.name} => $delegateFieldName.${e.name};";
       }),
-    ]).addTo(output);
-    "base class $delegatedName$typParams"
+    ]);
+    yield "base class $delegatedName$typParams"
         .plus(" extends $effectiveBaseClassName$typeArgs ")
         .plus(" with $mixinName$typeArgs")
         .plusCurlyLines([
@@ -271,9 +281,8 @@ class DelegateComposeGenerator extends GeneratorForAnnotation<Compose> {
             "this.$delegateFieldName",
           )
           .plusSemi,
-    ]).addTo(output);
+    ]);
 
-    return output.joinLines;
   }
 }
 
@@ -354,3 +363,5 @@ extension InterfaceTypeX on InterfaceType {
 extension _StringX on String {
   String get withoutHas => substring(prefixOfHas.length);
 }
+
+T run<T>(T Function() fn) => fn();

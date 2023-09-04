@@ -82,7 +82,7 @@ class ExtGenerator extends Generator {
         if (firstSpecialParam.isNamed) {
           yield* specials.enclosedInCurly;
         } else {
-          yield* specials.enclosedInBracket;
+          yield* specials.enclosedInSquareBracket;
         }
       }
     }
@@ -157,7 +157,7 @@ class ExtGenerator extends Generator {
           nameSuffix: r'$',
           paramList: firstSpecialParam.isRequired
               ? paramList
-              : paramList.enclosedInBracket,
+              : paramList.enclosedInSquareBracket,
         );
       }
 
