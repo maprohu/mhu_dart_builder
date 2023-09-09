@@ -5,35 +5,106 @@ Builder delegateHasClassBuilder(BuilderOptions options) => PartBuilder(
       '.g.has.dart',
     );
 
-class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
+class DelegateHasClassGenerator extends Generator {
+  TypeChecker get typeCheckerHas => TypeChecker.fromRuntime(Has);
+
+  TypeChecker get typeCheckerHasOf => TypeChecker.fromRuntime(HasOf);
+
   @override
-  generateForAnnotatedElement(
-    Element element,
-    ConstantReader annotation,
-    buildStep,
-  ) {
-    element as TypeParameterizedElement;
+  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) {
+    return generateStrings(library).join('\n\n');
+  }
 
-    var output = <String>[];
+  Strings generateStrings(LibraryReader library) sync* {
+    for (var annotatedElement in library.annotatedWith(typeCheckerHas)) {
+      final element = annotatedElement.element as TypeParameterizedElement;
+      yield* generateHas(element: element);
+    }
 
+    for (final element in library.allElements) {
+      for (final annotation in typeCheckerHasOf.annotationsOf(element)) {
+        final reader = ConstantReader(annotation);
+        final type = reader.objectValue.type as InterfaceType;
+
+        final target = type.typeArguments.first;
+        final element = target.element as TypeParameterizedElement;
+        yield* generateHas(element: element);
+      }
+    }
+  }
+
+  // String generateForAnnotatedElement(
+  //   Element element,
+  //   ConstantReader annotation,
+  // ) {
+  //   element as TypeParameterizedElement;
+  //
+  //   return generateHas(element: element).joinLines;
+  //
+  //   // var output = <String>[];
+  //   //
+  //   // final name = element.displayName;
+  //   // final params = element.parametersDart;
+  //   // final args = element.argumentsDart;
+  //   //
+  //   // final indirectName = "Call$name";
+  //   //
+  //   // void hasClass(String name) {
+  //   //   final camelName = name.camelCase;
+  //   //
+  //   //   "abstract class $prefixOfHas$name$params".plusCurlyLines([
+  //   //     "$name$args get $camelName;",
+  //   //   ]).addTo(output);
+  //   //   "mixin $prefixOfMix$name$params"
+  //   //       .plus(" implements $prefixOfHas$name$args")
+  //   //       .plusCurlyLines([
+  //   //     "@override late final $name$args $camelName;",
+  //   //   ]).addTo(output);
+  //   //   "extension $prefixOfHas$name\$Ext$params"
+  //   //       .plus(" on $name$args")
+  //   //       .plusCurlyLines([
+  //   //     "void init$prefixOfMix$name"
+  //   //         .plusParen("$prefixOfMix$name$args mix")
+  //   //         .plusCurlyLines([
+  //   //       "mix.$camelName = this;",
+  //   //     ]),
+  //   //   ]).addTo(output);
+  //   // }
+  //   //
+  //   // final defaultValue = element.defaultValue;
+  //   // if (defaultValue != null) {
+  //   //   "@HasDefault($defaultValue)".addTo(output);
+  //   // }
+  //   //
+  //   // hasClass(name);
+  //   // "typedef $indirectName$params = $name$args Function();".addTo(output);
+  //   // hasClass(indirectName);
+  //   //
+  //   // return output.joinLines;
+  // }
+
+  Strings generateHas({
+    required TypeParameterizedElement element,
+    // required List<DartType> typeArgs,
+  }) sync* {
     final name = element.displayName;
     final params = element.parametersDart;
     final args = element.argumentsDart;
 
     final indirectName = "Call$name";
 
-    void hasClass(String name) {
+    Strings hasClass(String name) sync* {
       final camelName = name.camelCase;
 
-      "abstract class $prefixOfHas$name$params".plusCurlyLines([
+      yield "abstract class $prefixOfHas$name$params".plusCurlyLines([
         "$name$args get $camelName;",
-      ]).addTo(output);
-      "mixin $prefixOfMix$name$params"
+      ]);
+      yield "mixin $prefixOfMix$name$params"
           .plus(" implements $prefixOfHas$name$args")
           .plusCurlyLines([
         "@override late final $name$args $camelName;",
-      ]).addTo(output);
-      "extension $prefixOfHas$name\$Ext$params"
+      ]);
+      yield "extension $prefixOfHas$name\$Ext$params"
           .plus(" on $name$args")
           .plusCurlyLines([
         "void init$prefixOfMix$name"
@@ -41,23 +112,16 @@ class DelegateHasClassGenerator extends GeneratorForAnnotation<Has> {
             .plusCurlyLines([
           "mix.$camelName = this;",
         ]),
-      ]).addTo(output);
+      ]);
     }
 
     final defaultValue = element.defaultValue;
     if (defaultValue != null) {
-      "@HasDefault($defaultValue)".addTo(output);
+      yield "@HasDefault($defaultValue)";
     }
 
-    hasClass(name);
-    "typedef $indirectName$params = $name$args Function();".addTo(output);
-    hasClass(indirectName);
-    //
-    // "extension $prefixOfHas$indirectName\$Ext$params on $prefixOfHas$indirectName$args"
-    //     .plusCurlyLines([
-    //   "$name$args get ${name.camelCase} => ${name.camelCase}$suffixOfIndirect();"
-    // ]).also(out);
-
-    return output.joinLines;
+    yield* hasClass(name);
+    yield "typedef $indirectName$params = $name$args Function();";
+    yield* hasClass(indirectName);
   }
 }

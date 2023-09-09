@@ -1,11 +1,12 @@
+@HasOf<String>()
+library;
+
 import 'package:mhu_dart_annotation/mhu_dart_annotation.dart';
-import 'package:mhu_dart_commons/commons.dart';
 
 import 'delegate_example.dart' as $lib;
 part 'delegate_example.g.has.dart';
 part 'delegate_example.g.dart';
 
-part 'delegate_example.freezed.dart';
 
 @Has()
 typedef ReadValue<T extends Object> = T Function();
@@ -58,18 +59,18 @@ abstract class NullableTest implements HasSomething<int?> {
   }
 }
 
-@freezedStruct
-class TST with _$TST   {
-  factory TST({
-    required int columnCount,
-    required int rowCount,
-  }) = _TST;
-
-  factory TST.other({
-    required int x,
-  }) =>
-      TST(
-        columnCount: 0,
-        rowCount: 0,
-      );
-}
+// @freezedStruct
+// class TST with _$TST   {
+//   factory TST({
+//     required int columnCount,
+//     required int rowCount,
+//   }) = _TST;
+//
+//   factory TST.other({
+//     required int x,
+//   }) =>
+//       TST(
+//         columnCount: 0,
+//         rowCount: 0,
+//       );
+// }

@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:mhu_dart_commons/io.dart';
+import 'package:path/path.dart' as p;
 
 import '../.dart_tool/build/entrypoint/build.dart' as build;
 
-void main()  {
+void main() {
   final buildDir = Directory(".dart_tool/build");
   for (final dir in buildDir.listSync()) {
-    if (dir.name == "entrypoint") continue;
+    if (p.basename(dir.path) == "entrypoint") continue;
 
     dir.deleteSync(recursive: true);
   }
